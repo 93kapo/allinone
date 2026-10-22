@@ -1,0 +1,5 @@
+# PLACEHOLDER DOMAIN: replace YOUR-DOMAIN.example with the real domain before publishing.
+User-agent: *
+Allow: /
+
+Sitemap: https://YOUR-DOMAIN.example/sitemap.xml
