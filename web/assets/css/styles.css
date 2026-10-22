@@ -12,10 +12,14 @@
   --gutter:16px;
   --radius:14px;
   --maxw:1120px;
+  --ease:cubic-bezier(.16,1,.3,1);   /* expo-out */
+  --dur-fast:.25s;--dur-base:.7s;--dur-slow:1s;--stagger:70ms;
+  --wa:#25D366;
+  --header-h:72px;
   --font:'Poppins',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%;scroll-padding-top:calc(var(--header-h) + 8px)}
 @media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
 body{margin:0;font-family:var(--font);color:var(--text);background:var(--bg);line-height:1.6;font-size:1rem;overflow-x:hidden}
 img,video,svg{max-width:100%;height:auto;display:block}
@@ -36,14 +40,13 @@ a{color:var(--slate-dark)}
 .skip:focus{left:var(--gutter);top:8px}
 
 /* Buttons */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:48px;padding:12px 24px;border-radius:999px;font:600 1rem var(--font);text-decoration:none;border:2px solid transparent;cursor:pointer;text-align:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:48px;padding:12px 24px;border-radius:999px;font:600 1rem var(--font);text-decoration:none;border:2px solid transparent;cursor:pointer;text-align:center;position:relative;overflow:hidden;isolation:isolate}
 .btn-primary{background:var(--teal);color:var(--ink)}
 .btn-primary:hover{background:#2DB0CA}
 .btn-outline{background:transparent;color:#fff;border-color:#fff}
 .btn-outline:hover{background:rgba(255,255,255,.12)}
 .btn-dark{background:var(--ink);color:#fff}
 .btn-dark:hover{background:#0B2429}
-@media (prefers-reduced-motion:no-preference){.btn{transition:background-color .2s}}
 
 /* Header */
 .site-header{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid var(--line)}
@@ -57,7 +60,7 @@ a{color:var(--slate-dark)}
 .header-inner{flex-wrap:wrap}
 .main-nav ul{list-style:none;margin:0;padding:8px 0 12px;display:flex;flex-direction:column}
 .main-nav a{display:block;padding:10px 4px;text-decoration:none;color:var(--ink);font-weight:500}
-.main-nav a:hover{color:var(--slate-dark);text-decoration:underline}
+.main-nav a:hover{color:var(--slate-dark)}
 .lang{display:flex;gap:4px;align-items:center;font-weight:600;font-size:.9rem;padding:8px 0}
 .lang a,.lang span{padding:4px 10px;border-radius:999px;text-decoration:none}
 .lang [aria-current="true"]{background:var(--ink);color:#fff}
@@ -163,4 +166,137 @@ html:not(.js) .nav-toggle{display:none}
 .copy{border-top:1px solid rgba(255,255,255,.15);margin-top:28px;padding-top:16px;font-size:.85rem}
 .lic{display:none}
 .lic.show{display:inline-block;margin-top:8px;font-weight:600}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+
+/* =====================================================================
+   MOTION + WHATSAPP
+   Hidden initial states ONLY exist under html.js-motion (added by JS,
+   never with prefers-reduced-motion). Without it everything is visible.
+   ===================================================================== */
+
+/* Buttons: shine + transitions */
+.btn{transition:background-color var(--dur-fast) var(--ease),translate var(--dur-fast) var(--ease),box-shadow var(--dur-fast) var(--ease)}
+.btn::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.4) 50%,transparent 65%);transform:translateX(-120%);pointer-events:none}
+.btn:hover::after{transform:translateX(120%);transition:transform .8s var(--ease)}
+.btn-primary:hover,.btn-dark:hover{box-shadow:0 8px 20px -8px rgba(18,51,58,.45)}
+.btn svg{flex:none}
+
+/* WhatsApp buttons (text/icon always dark on green, or green icon on dark) */
+.btn-wa{background:var(--wa);color:#08301A}
+.btn-wa:hover{background:#1FBE5B}
+.btn-wa-line .wa-ico{color:var(--wa)}
+.contact-wa{margin-top:14px}
+
+/* Animated underline for links */
+.main-nav a:not(.btn),.site-footer li a,.contact-list a{background-image:linear-gradient(currentColor,currentColor);background-repeat:no-repeat;background-position:0 100%;background-size:0 2px;transition:background-size var(--dur-fast) var(--ease),color var(--dur-fast)}
+.main-nav a:not(.btn):hover,.main-nav a:not(.btn):focus-visible,.site-footer li a:hover,.contact-list a:hover{background-size:100% 2px}
+.main-nav .lang a{background-image:none}
+.main-nav a{padding-bottom:8px}
+@media (max-width:899px){.main-nav a:not(.btn){display:inline-block}}
+
+/* Header */
+.site-header{transition:background-color var(--dur-fast) var(--ease),box-shadow var(--dur-base) var(--ease)}
+.brand img{transform-origin:left center;transition:transform var(--dur-base) var(--ease)}
+.site-header.is-scrolled{background:rgba(255,255,255,.9);box-shadow:0 6px 24px -14px rgba(18,51,58,.35)}
+@supports (backdrop-filter:blur(8px)){.site-header.is-scrolled{background:rgba(255,255,255,.78);backdrop-filter:saturate(1.4) blur(12px)}}
+.site-header.is-scrolled .brand img{transform:scale(.82)}
+.scroll-progress{position:fixed;left:0;top:0;width:100%;height:3px;background:var(--teal);transform:scaleX(0);transform-origin:0 50%;z-index:60;pointer-events:none;will-change:transform}
+
+/* Hero decoration + parallax targets */
+.hero{position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;width:640px;height:640px;right:-160px;top:-200px;border-radius:50%;background:radial-gradient(closest-side,rgba(56,192,217,.22),transparent);pointer-events:none;translate:0 var(--py,0px)}
+.hero .container{position:relative}
+.hero-logo{translate:0 var(--py2,0px)}
+
+/* Marquee */
+.marquee{background:var(--teal);color:var(--ink);overflow:hidden;border-block:1px solid rgba(18,51,58,.15)}
+.marquee-track{display:flex;width:max-content;max-width:100%}
+.marquee-group{list-style:none;margin:0;padding:12px 0;display:flex;flex-wrap:wrap;justify-content:center;gap:6px 0;flex:none;max-width:100%}
+.marquee-group li{font-weight:600;font-size:.95rem;white-space:nowrap;padding:0 22px;display:flex;align-items:center;gap:22px}
+.marquee-group li::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--ink);opacity:.55}
+.marquee-track.is-running{max-width:none;will-change:transform;animation:marquee 38s linear infinite}
+.marquee-track.is-running .marquee-group{flex-wrap:nowrap;max-width:none;justify-content:flex-start}
+.marquee:hover .marquee-track{animation-play-state:paused}
+@keyframes marquee{to{transform:translate3d(-50%,0,0)}}
+
+/* Service cards: lift, cursor glow, 3D tilt */
+.card{position:relative;overflow:hidden;transform:perspective(900px) translateY(var(--lift,0)) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform var(--dur-fast) var(--ease),box-shadow var(--dur-base) var(--ease),border-color var(--dur-fast)}
+.card:hover{--lift:-6px;box-shadow:0 18px 36px -18px rgba(18,51,58,.35)}
+.card::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%),rgba(56,192,217,.2),transparent 70%);transition:opacity var(--dur-base) var(--ease)}
+.card:hover::after{opacity:1}
+.review:hover{--lift:0px;box-shadow:none}
+
+/* Gallery */
+.g-item img,.g-item video,.g-ph{transition:transform 1.2s var(--ease)}
+.g-item:hover img,.g-item:hover .g-ph{transform:scale(1.05)}
+.g-item{position:relative}
+
+/* FAQ */
+.faq details{overflow:hidden;transition:border-color var(--dur-fast),box-shadow var(--dur-base) var(--ease)}
+.faq details[open]{border-color:var(--teal);box-shadow:0 10px 24px -18px rgba(18,51,58,.4)}
+.faq summary::after{transition:transform var(--dur-base) var(--ease);display:block}
+.faq details[open] summary::after{transform:rotate(180deg)}
+
+/* WhatsApp floating button */
+.wa-float{position:fixed;z-index:40;right:calc(16px + env(safe-area-inset-right));bottom:calc(16px + env(safe-area-inset-bottom));display:flex;align-items:center;flex-direction:row-reverse;gap:10px;height:56px;min-width:56px;padding:0 13px;border-radius:999px;background:var(--wa);color:#08301A;text-decoration:none;box-shadow:0 8px 22px -6px rgba(8,48,26,.5);transition:transform var(--dur-fast) var(--ease),box-shadow var(--dur-fast),background-color var(--dur-fast)}
+.wa-float:hover{background:#1FBE5B;transform:translateY(-2px)}
+.wa-float:focus-visible{outline:3px solid var(--ink);outline-offset:3px;box-shadow:0 0 0 6px #fff}
+.wa-float::before{content:"";position:absolute;inset:0;border-radius:inherit;border:2px solid var(--wa);opacity:0;pointer-events:none}
+.wa-float svg{flex:none}
+.wa-label{font-weight:600;font-size:.92rem;white-space:nowrap;max-width:0;overflow:hidden;opacity:0;transition:max-width var(--dur-base) var(--ease),opacity var(--dur-fast)}
+.wa-float:hover .wa-label,.wa-float:focus-visible .wa-label,.wa-float.show-label .wa-label{max-width:230px;opacity:1}
+.wa-float.show-label,.wa-float:hover,.wa-float:focus-visible{padding-left:18px}
+body.nav-open .wa-float{opacity:0;pointer-events:none;transform:translateY(12px)}
+@media (max-width:899px){.wa-float{bottom:calc(14px + env(safe-area-inset-bottom))}}
+.site-footer{padding-bottom:calc(88px + env(safe-area-inset-bottom))}
+[hidden]{display:none!important}
+
+/* ---------- Motion-enabled states (JS + no reduced motion) ---------- */
+@media (prefers-reduced-motion:no-preference){
+  html{scroll-behavior:smooth}
+  .wa-float::before{animation:wa-pulse 2.8s var(--ease) 2s infinite}
+  @keyframes wa-pulse{0%{opacity:.7;transform:scale(1)}70%,100%{opacity:0;transform:scale(1.5)}}
+
+  .js-motion body{animation:page-in .6s var(--ease) both}
+  .js-motion.page-leave body{animation:none;opacity:0;transition:opacity .28s ease}
+  @keyframes page-in{from{opacity:0}to{opacity:1}}
+
+  /* Hero entrance (keyframes: always end visible) */
+  .js-motion .hero h1:not(.is-split){opacity:0}
+  .hero h1 .w{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.14em;margin-bottom:-.14em}
+  .hero h1 .w>span{display:inline-block;animation:word-up var(--dur-slow) var(--ease) both;animation-delay:calc(.15s + var(--wi,0) * 55ms)}
+  @keyframes word-up{from{transform:translate3d(0,110%,0)}to{transform:none}}
+  .js-motion .hero .eyebrow,.js-motion .hero .lead,.js-motion .hero .hero-badge{animation:fade-up var(--dur-base) var(--ease) both}
+  .js-motion .hero .eyebrow{animation-delay:.05s}
+  .js-motion .hero .lead{animation-delay:.55s}
+  .js-motion .hero .hero-cta .btn{animation:fade-up var(--dur-base) var(--ease) both;animation-delay:calc(.75s + var(--bi,0) * 90ms)}
+  .js-motion .hero .hero-badge{animation-delay:1s}
+  .js-motion .hero-logo{animation:logo-in 1.2s var(--ease) .35s both}
+  @keyframes fade-up{from{opacity:0;transform:translate3d(0,22px,0)}to{opacity:1;transform:none}}
+  @keyframes logo-in{from{opacity:0;transform:translate3d(0,24px,0) scale(.94)}to{opacity:1;transform:none}}
+  .js-motion .marquee{animation:fade-up var(--dur-base) var(--ease) 1s both}
+
+  /* Scroll reveal */
+  .js-motion [data-rv]{transition:opacity var(--dur-base) var(--ease),translate var(--dur-base) var(--ease),filter var(--dur-base) var(--ease),clip-path var(--dur-slow) var(--ease),transform var(--dur-fast) var(--ease),box-shadow var(--dur-base) var(--ease),border-color var(--dur-fast);transition-delay:calc(var(--i,0) * var(--stagger)),calc(var(--i,0) * var(--stagger)),calc(var(--i,0) * var(--stagger)),calc(var(--i,0) * var(--stagger)),0s,0s,0s}
+  .js-motion [data-rv]:not(.in){opacity:0;translate:0 28px;filter:blur(6px)}
+  .js-motion [data-rv="mask"]:not(.in){translate:0 45%;filter:none;clip-path:inset(0 0 90% 0)}
+  .js-motion [data-rv="mask"].in{clip-path:inset(-10px -10px -10px -10px)}
+  .js-motion [data-rv="clip"]:not(.in){translate:0 0;filter:none;clip-path:inset(14% round var(--radius))}
+  .js-motion [data-rv="clip"].in{clip-path:inset(0 round var(--radius))}
+  .js-motion [data-rv="clip"] img,.js-motion [data-rv="clip"] video,.js-motion [data-rv="clip"] .g-ph{scale:1.12;transition:scale 1.4s var(--ease),transform 1.2s var(--ease)}
+  .js-motion [data-rv="clip"].in img,.js-motion [data-rv="clip"].in video,.js-motion [data-rv="clip"].in .g-ph{scale:1}
+  .js-motion [data-rv].in{will-change:auto}
+  .js-motion .faq details[data-rv]{transition-property:opacity,translate,filter,border-color,box-shadow}
+
+  /* Reveal must not fight card hover/tilt (separate properties: translate vs transform) */
+  .js-motion .card[data-rv]{transition-property:opacity,translate,filter,transform,box-shadow,border-color}
+  .js-motion .card[data-rv]{transition-duration:var(--dur-base),var(--dur-base),var(--dur-base),var(--dur-fast),var(--dur-base),var(--dur-fast)}
+  .js-motion .card[data-rv]{transition-delay:calc(var(--i,0) * var(--stagger)),calc(var(--i,0) * var(--stagger)),calc(var(--i,0) * var(--stagger)),0s,0s,0s}
+}
+@media (hover:none),(pointer:coarse){.card{transform:none}.card:hover{box-shadow:none}.card::after{display:none}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  .card,.card:hover{transform:none}
+  .wa-float::before{display:none}
+}

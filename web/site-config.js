@@ -9,6 +9,11 @@ window.SITE_CONFIG = {
   phone: "904-855-9635",
   phoneTel: "+19048559635",
 
+  // WhatsApp: digits only, with country code (no +). whatsappEnabled=false hides every WhatsApp button.
+  // WhatsApp: solo dígitos con código de país (sin +). whatsappEnabled=false oculta los botones.
+  whatsappNumber: "19048559635",
+  whatsappEnabled: true,
+
   // Leave "" to hide. / Déjalo vacío para ocultar.
   email: "",
 
