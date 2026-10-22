@@ -32,6 +32,11 @@ window.SITE_CONFIG = {
   // then "Licensed & Insured" / "Licenciados y asegurados" appears.
   showLicensed: false,
 
+  // REAL customer reviews (leave [] to show clearly marked placeholders). Only add genuine reviews.
+  // RESEÑAS REALES (deja [] para mostrar marcadores). Agrega solo reseñas auténticas.
+  // { name: "Name, area", text: { en: "...", es: "..." } }
+  reviews: [],
+
   // Quote form. PENDING: paste your endpoint, e.g.
   //   Web3Forms: "https://api.web3forms.com/submit"  (+ formAccessKey below)
   //   Formspree: "https://formspree.io/f/XXXXXXXX"

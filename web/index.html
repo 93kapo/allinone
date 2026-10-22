@@ -5,18 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Painting &amp; Remodeling in Jacksonville, FL | All In One Painting &amp; Remodeling Group</title>
 <meta name="description" content="Free estimates for interior and exterior painting, drywall, flooring, bathrooms, kitchens, decks and more in Jacksonville, FL and surrounding areas. Residential and commercial. Call 904-855-9635.">
-<!-- PLACEHOLDER DOMAIN: replace YOUR-DOMAIN.example with the real domain (canonical, hreflang, og:url, JSON-LD, sitemap, robots) -->
-<link rel="canonical" href="https://YOUR-DOMAIN.example/">
-<link rel="alternate" hreflang="en" href="https://YOUR-DOMAIN.example/">
-<link rel="alternate" hreflang="es" href="https://YOUR-DOMAIN.example/es/">
-<link rel="alternate" hreflang="x-default" href="https://YOUR-DOMAIN.example/">
+<link rel="canonical" href="https://allin1jax.com/">
+<link rel="alternate" hreflang="en" href="https://allin1jax.com/">
+<link rel="alternate" hreflang="es" href="https://allin1jax.com/es/">
+<link rel="alternate" hreflang="x-default" href="https://allin1jax.com/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="All In One Painting &amp; Remodeling Group LLC">
 <meta property="og:title" content="Painting &amp; Remodeling in Jacksonville, FL | All In One Painting &amp; Remodeling Group">
 <meta property="og:description" content="Free estimates for interior and exterior painting, drywall, flooring, bathrooms, kitchens, decks and more in Jacksonville, FL and surrounding areas. Residential and commercial. Call 904-855-9635.">
-<meta property="og:url" content="https://YOUR-DOMAIN.example/">
+<meta property="og:url" content="https://allin1jax.com/">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://YOUR-DOMAIN.example/assets/logo-full-color.png">
+<meta property="og:image" content="https://allin1jax.com/assets/logo-full-color.png">
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#12333A">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
@@ -24,7 +23,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
-<script>(function(d){var r=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;if(!r&&"IntersectionObserver"in window){d.classList.add("js-motion");setTimeout(function(){if(!window.__motionReady)d.classList.remove("js-motion")},3500)}})(document.documentElement)</script>
+<script>(function(d){var r=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;if(!r&&"IntersectionObserver"in window){d.classList.add("js-motion");var s=0;try{s=sessionStorage.getItem("aio-intro")}catch(e){}if(!s)d.classList.add("js-intro");setTimeout(function(){if(!window.__motionReady){d.classList.remove("js-motion");d.classList.remove("js-intro")}},3500)}})(document.documentElement)</script>
 <link rel="stylesheet" href="assets/css/styles.css">
 <script type="application/ld+json">{
   "@context": "https://schema.org",
@@ -33,11 +32,11 @@
     "HousePainter"
   ],
   "name": "All In One Painting & Remodeling Group LLC",
-  "url": "https://YOUR-DOMAIN.example/",
+  "url": "https://allin1jax.com/",
   "telephone": "+19048559635",
   "description": "Residential and commercial painting and remodeling in Jacksonville, FL and surrounding areas: interior and exterior painting, drywall, flooring, bathrooms, kitchens, decks and electrical via licensed subcontractors.",
-  "image": "https://YOUR-DOMAIN.example/assets/logo-full-color.png",
-  "logo": "https://YOUR-DOMAIN.example/assets/logo-full-color.png",
+  "image": "https://allin1jax.com/assets/logo-full-color.png",
+  "logo": "https://allin1jax.com/assets/logo-full-color.png",
   "address": {
     "@type": "PostalAddress",
     "addressLocality": "Jacksonville",
@@ -58,17 +57,18 @@
 }</script>
 </head>
 <body>
+<div class="intro" aria-hidden="true"><img src="assets/logo-icon-teal.png" alt="" width="96" height="96"></div>
 <a class="skip" href="#main">Skip to main content</a>
-<header class="site-header">
+<header class="site-header" id="site-header">
  <div class="container header-inner">
   <a class="brand" href="#top" aria-label="All In One Painting &amp; Remodeling Group">
    <img src="assets/logo-icon-teal.png" alt="" width="40" height="40">
    <span>All In One<small>Painting &amp; Remodeling</small></span>
   </a>
-  <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav">Menu</button>
+  <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav"><span class="burger" aria-hidden="true"><i></i><i></i><i></i></span><span class="nav-toggle-txt">Menu</span></button>
   <nav class="main-nav" id="main-nav" aria-label="Menu">
    <ul><li><a href="#services">Services</a></li><li><a href="#gallery">Gallery</a></li><li><a href="#process">Process</a></li><li><a href="#why">Why us</a></li><li><a href="#areas">Areas</a></li><li><a href="#reviews">Reviews</a></li><li><a href="#faq">FAQ</a></li><li><a href="#contact">Contact</a></li>
-    <li><div class="lang" role="group" aria-label="Language"><span aria-current="true">EN</span><a href="es/" hreflang="es" lang="es">ES</a></div></li>
+    <li class="nav-lang"><div class="lang" role="group" aria-label="Language"><span aria-current="true">EN</span><a href="es/" hreflang="es" lang="es">ES</a></div></li>
    </ul>
   </nav>
   <a class="btn btn-primary header-call" href="tel:+19048559635" data-phone-link>Call 904-855-9635</a>
@@ -76,6 +76,7 @@
 </header>
 <main id="main">
 <section class="hero" id="top">
+ <div class="hero-bg" aria-hidden="true"><i class="hb1"></i><i class="hb2"></i><i class="hgrid"></i></div>
  <div class="container hero-grid">
   <div>
    <p class="eyebrow">Jacksonville, FL and surrounding areas</p>
@@ -88,42 +89,47 @@
    </div>
    <span class="hero-badge lic" id="hero-badge" hidden>Licensed &amp; Insured</span>
   </div>
-  <div class="hero-logo"><img src="assets/logo-full-white.png" alt="All In One Painting &amp; Remodeling Group LLC logo" width="600" height="592"></div>
+  <div class="hero-logo"><svg class="brush" viewBox="0 0 400 400" aria-hidden="true" focusable="false"><g fill="none" stroke="#38C0D9" stroke-linecap="round" stroke-linejoin="round"><path class="b-main" d="M28 318 L176 176 L236 224 L376 62" stroke-width="44" opacity=".9"/><path class="b-thin" d="M44 346 L186 214 L246 262 L364 128" stroke-width="12" opacity=".55"/><path class="b-thin" d="M20 282 L166 142 L228 190 L388 24" stroke-width="7" opacity=".4"/></g></svg><img src="assets/logo-full-white.png" alt="All In One Painting &amp; Remodeling Group LLC logo" width="600" height="592"></div>
  </div>
 </section>
-
 <div class="marquee" aria-hidden="true"><div class="marquee-track"><ul class="marquee-group"><li>Interior painting</li><li>Exterior painting</li><li>Drywall</li><li>Flooring</li><li>Bathroom remodeling</li><li>Kitchen remodeling</li><li>Decks</li><li>Electrical work</li></ul></div></div>
-
 <section class="section" id="services">
  <div class="container">
   <p class="eyebrow">Services</p><h2>What we do</h2><p class="lead">Residential and commercial projects, inside and out.</p>
   <div class="segments"><span class="chip">Residential</span><span class="chip">Commercial</span></div>
-  <div class="grid cols-4"><article class="card"><h3>Interior painting</h3><p>Walls, ceilings, trim and doors, with careful prep and clean lines.</p></article><article class="card"><h3>Exterior painting</h3><p>Fresh, durable finishes to protect and refresh the outside of your property.</p></article><article class="card"><h3>Drywall</h3><p>Repairs, patching and finishing so surfaces are smooth and ready to paint.</p></article><article class="card"><h3>Flooring</h3><p>Floor installation and replacement to fit your space and style.</p></article><article class="card"><h3>Bathroom remodeling</h3><p>Updates and full remodels, planned around how you use the space.</p></article><article class="card"><h3>Kitchen remodeling</h3><p>Refreshes and complete remodels for a kitchen that works for you.</p></article><article class="card"><h3>Decks</h3><p>Deck building and repair for your outdoor living space.</p></article><article class="card"><h3>Electrical work</h3><p>Handled through licensed electrical subcontractors, coordinated by us.</p></article></div>
+  <div class="grid cols-4 svc-grid">
+<article class="card svc" data-svc="interior"><span class="svc-ico"><svg class="ico" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect pathLength="1" x="4" y="3" width="13" height="5" rx="1.5"/><path pathLength="1" d="M17 5.5h2.5v5H11v3"/><rect pathLength="1" x="9.5" y="13.5" width="3" height="7" rx="1"/></svg></span><h3>Interior painting</h3><p>Walls, ceilings, trim and doors, with careful prep and clean lines.</p><div class="svc-more"><p class="svc-incl">What is typically included</p><ul><li>Surface prep and protection of floors and furniture</li><li>Walls, ceilings, trim and doors</li><li>Help choosing colors and finishes</li><li>Clean-up when the job is done</li></ul><p class="fine">Typical scope. The exact scope is confirmed in your written estimate.</p><a class="btn btn-primary btn-sm" href="#contact" data-pick-svc="interior">Request this service</a></div></article>
+<article class="card svc" data-svc="exterior"><span class="svc-ico"><svg class="ico" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path pathLength="1" d="M3 11l9-7 9 7"/><path pathLength="1" d="M5.5 9.5V20h13V9.5"/><path pathLength="1" d="M10 20v-5h4v5"/></svg></span><h3>Exterior painting</h3><p>Fresh, durable finishes to protect and refresh the outside of your property.</p><div class="svc-more"><p class="svc-incl">What is typically included</p><ul><li>Cleaning and prep of exterior surfaces</li><li>Priming and painting siding, trim and doors</li><li>Finishes chosen for outdoor conditions</li><li>Clean-up when the job is done</li></ul><p class="fine">Typical scope. The exact scope is confirmed in your written estimate.</p><a class="btn btn-primary btn-sm" href="#contact" data-pick-svc="exterior">Request this service</a></div></article>
+<article class="card svc" data-svc="drywall"><span class="svc-ico"><svg class="ico" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect pathLength="1" x="3.5" y="4" width="17" height="16" rx="1.5"/><path pathLength="1" d="M3.5 12h17M12 4v8M8 12v8M16 12v8"/></svg></span><h3>Drywall</h3><p>Repairs, patching and finishing so surfaces are smooth and ready to paint.</p><div class="svc-more"><p class="svc-incl">What is typically included</p><ul><li>Patching holes and damaged areas</li><li>Taping, mudding and sanding</li><li>Smooth surfaces ready for paint</li><li>Repairs before or during a remodel</li></ul><p class="fine">Typical scope. The exact scope is confirmed in your written estimate.</p><a class="btn btn-primary btn-sm" href="#contact" data-pick-svc="drywall">Request this service</a></div></article>
+<article class="card svc" data-svc="flooring"><span class="svc-ico"><svg class="ico" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path pathLength="1" d="M3 8l9-4 9 4-9 4z"/><path pathLength="1" d="M3 12l9 4 9-4"/><path pathLength="1" d="M3 16l9 4 9-4"/></svg></span><h3>Flooring</h3><p>Floor installation and replacement to fit your space and style.</p><div class="svc-more"><p class="svc-incl">What is typically included</p><ul><li>Removing old flooring when needed</li><li>Surface preparation</li><li>Installation of the flooring you choose</li><li>Finishing touches and clean-up</li></ul><p class="fine">Typical scope. The exact scope is confirmed in your written estimate.</p><a class="btn btn-primary btn-sm" href="#contact" data-pick-svc="flooring">Request this service</a></div></article>
+<article class="card svc" data-svc="bathroom"><span class="svc-ico"><svg class="ico" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path pathLength="1" d="M4 12h16v3a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><path pathLength="1" d="M6 12V6a2 2 0 0 1 4 0"/><path pathLength="1" d="M7 19l-1 2M17 19l1 2"/></svg></span><h3>Bathroom remodeling</h3><p>Updates and full remodels, planned around how you use the space.</p><div class="svc-more"><p class="svc-incl">What is typically included</p><ul><li>Quick updates or full remodels</li><li>Planning around how you use the space</li><li>Coordination of the trades involved</li><li>Final walkthrough with you</li></ul><p class="fine">Typical scope. The exact scope is confirmed in your written estimate.</p><a class="btn btn-primary btn-sm" href="#contact" data-pick-svc="bathroom">Request this service</a></div></article>
+<article class="card svc" data-svc="kitchen"><span class="svc-ico"><svg class="ico" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect pathLength="1" x="4" y="3" width="16" height="18" rx="1.5"/><path pathLength="1" d="M4 12h16M8 7h3M13 7h3M8 16h3M13 16h3"/></svg></span><h3>Kitchen remodeling</h3><p>Refreshes and complete remodels for a kitchen that works for you.</p><div class="svc-more"><p class="svc-incl">What is typically included</p><ul><li>Refreshes or complete remodels</li><li>Layout and finish planning with you</li><li>Coordination of the trades involved</li><li>Final walkthrough with you</li></ul><p class="fine">Typical scope. The exact scope is confirmed in your written estimate.</p><a class="btn btn-primary btn-sm" href="#contact" data-pick-svc="kitchen">Request this service</a></div></article>
+<article class="card svc" data-svc="decks"><span class="svc-ico"><svg class="ico" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path pathLength="1" d="M3 5h18M3 10h18M3 14h18M3 18h18"/><path pathLength="1" d="M6 10v10M18 10v10"/></svg></span><h3>Decks</h3><p>Deck building and repair for your outdoor living space.</p><div class="svc-more"><p class="svc-incl">What is typically included</p><ul><li>New deck building</li><li>Repair of existing decks</li><li>Refinishing and sealing</li><li>Clean-up when the job is done</li></ul><p class="fine">Typical scope. The exact scope is confirmed in your written estimate.</p><a class="btn btn-primary btn-sm" href="#contact" data-pick-svc="decks">Request this service</a></div></article>
+<article class="card svc" data-svc="electrical"><span class="svc-ico"><svg class="ico" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path pathLength="1" d="M13 2L5 13.5h6L10 22l9-12h-6z"/></svg></span><h3>Electrical work</h3><p>Handled through licensed electrical subcontractors, coordinated by us.</p><div class="svc-more"><p class="svc-incl">What is typically included</p><ul><li>Done by licensed electrical subcontractors</li><li>We coordinate the schedule with other work</li><li>One point of contact for you</li><li>Scope confirmed in your written estimate</li></ul><p class="fine">Typical scope. The exact scope is confirmed in your written estimate.</p><a class="btn btn-primary btn-sm" href="#contact" data-pick-svc="electrical">Request this service</a></div></article>
+  </div>
  </div>
 </section>
-
 <section class="section alt" id="gallery">
  <div class="container">
   <p class="eyebrow">Gallery</p><h2>Our work</h2><p class="lead">Photos and short videos of our projects are coming soon.</p>
+  <div class="ba-block"><h3>Before and after</h3><p class="fine">Drag the handle, or focus it and use the arrow keys.</p><div class="ba-grid" id="ba-grid"></div></div>
+  <div class="filters" id="g-filters" role="group" aria-label="Filter gallery by category"></div>
   <div class="gallery" id="gallery-grid" aria-label="Our work"></div>
   <noscript><p class="fine">Placeholders: project photos and videos will be added here.</p></noscript>
  </div>
 </section>
-
-<section class="section" id="process">
+<section class="section dark" id="process">
  <div class="container">
   <p class="eyebrow">Process</p><h2>How it works</h2>
-  <ol class="steps"><li><h3>Consultation</h3><p>Tell us about your project by phone or the form below.</p></li><li><h3>Detailed estimate</h3><p>You get a free, detailed estimate so you know what to expect.</p></li><li><h3>The work</h3><p>Our team gets the job done and keeps you updated along the way.</p></li><li><h3>Final walkthrough</h3><p>We walk the finished project with you to make sure you are happy.</p></li></ol>
+  <div class="timeline" id="timeline"><span class="tl-line" aria-hidden="true"><i></i></span><ol class="steps"><li><h3>Consultation</h3><p>Tell us about your project by phone or the form below.</p></li><li><h3>Detailed estimate</h3><p>You get a free, detailed estimate so you know what to expect.</p></li><li><h3>The work</h3><p>Our team gets the job done and keeps you updated along the way.</p></li><li><h3>Final walkthrough</h3><p>We walk the finished project with you to make sure you are happy.</p></li></ol></div>
  </div>
 </section>
-
 <section class="section alt" id="why">
  <div class="container">
   <p class="eyebrow">Why choose us</p><h2>Why choose All In One</h2>
   <div class="grid cols-3"><article class="card plain"><h3>Many trades, one contact</h3><p>Painting, drywall, flooring, bathrooms, kitchens and decks under one roof.</p></article><article class="card plain"><h3>Free, detailed estimates</h3><p>Know the scope before the work starts.</p></article><article class="card plain"><h3>Licensed electrical partners</h3><p>Electrical work is done by licensed subcontractors we coordinate.</p></article><article class="card plain"><h3>Residential and commercial</h3><p>Homes, offices and storefronts alike.</p></article><article class="card plain"><h3>Clear communication</h3><p>Straight answers and updates from first call to final walkthrough.</p></article><article class="card plain"><h3>Local team</h3><p>Based in Jacksonville, serving the surrounding area.</p></article></div>
  </div>
 </section>
-
 <section class="section" id="areas">
  <div class="container">
   <p class="eyebrow">Service areas</p><h2>Where we work</h2><p class="lead">We are based in Jacksonville, Florida and also serve nearby communities.</p>
@@ -131,53 +137,67 @@
   <p class="fine" style="margin-top:16px">Not sure if we cover your address? Call us or send your ZIP code in the form.</p>
  </div>
 </section>
-
 <section class="section alt" id="reviews">
  <div class="container">
   <p class="eyebrow">Reviews</p><h2>What customers say</h2><p class="lead">Customer reviews will be shown here.</p>
-  <div class="grid cols-3"><article class="card review"><span class="tag">Placeholder</span><p>Placeholder review. A real customer review will go here.</p><p><strong>Customer name, area</strong></p></article><article class="card review"><span class="tag">Placeholder</span><p>Placeholder review. A real customer review will go here.</p><p><strong>Customer name, area</strong></p></article><article class="card review"><span class="tag">Placeholder</span><p>Placeholder review. A real customer review will go here.</p><p><strong>Customer name, area</strong></p></article></div>
+  <ul class="trust" id="trust"><li class="trust-lic" data-trust-lic><span class="tag">Placeholder</span><strong>License and insurance</strong><span>License and insurance details will appear here once confirmed.</span></li><li><strong>Free, detailed written estimate</strong></li><li><strong>Local team in Jacksonville, FL</strong></li></ul>
+  <div class="carousel" id="carousel" role="region" aria-roledescription="carousel" aria-label="Customer reviews">
+   <div class="car-track" id="car-track" tabindex="0"><article class="card review car-slide" role="group" aria-roledescription="slide" aria-label="1 of 3"><span class="tag">Placeholder</span><p>Placeholder review. A real customer review will go here.</p><p><strong>Customer name, area</strong></p></article><article class="card review car-slide" role="group" aria-roledescription="slide" aria-label="2 of 3"><span class="tag">Placeholder</span><p>Placeholder review. A real customer review will go here.</p><p><strong>Customer name, area</strong></p></article><article class="card review car-slide" role="group" aria-roledescription="slide" aria-label="3 of 3"><span class="tag">Placeholder</span><p>Placeholder review. A real customer review will go here.</p><p><strong>Customer name, area</strong></p></article></div>
+   <div class="car-ctl"><button type="button" class="car-btn" id="car-prev" aria-label="Previous"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><div class="car-dots" id="car-dots"></div><button type="button" class="car-btn" id="car-next" aria-label="Next"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button></div>
+  </div>
  </div>
 </section>
-
 <section class="section" id="faq">
  <div class="container">
   <p class="eyebrow">FAQ</p><h2>Frequently asked questions</h2>
   <div class="faq"><details><summary>Is the estimate really free?</summary><p>Yes. We offer free estimates. Contact us and we will discuss your project.</p></details><details><summary>Do you work on homes and businesses?</summary><p>Yes, both residential and commercial projects.</p></details><details><summary>Do you do electrical work?</summary><p>Electrical work is carried out by licensed subcontractors that we coordinate for you.</p></details><details><summary>What areas do you serve?</summary><p>Jacksonville, Duval County and surrounding areas. Ask us about your location.</p></details><details><summary>How do I get started?</summary><p>Call 904-855-9635 or fill in the form with a short description of your project. Mention your ZIP code and the type of work.</p></details></div>
  </div>
 </section>
-
 <section class="section alt" id="contact">
  <div class="container contact-grid">
   <div>
-   <p class="eyebrow">Contact</p><h2>Request your free estimate</h2><p class="lead">Tell us about your project and we will get back to you.</p>
+   <p class="eyebrow">Contact</p><h2>Request your free estimate</h2><p class="lead">Answer four quick questions and send them by WhatsApp or call us. Nothing is sent until you press a button.</p>
    <ul class="contact-list">
-    <li><strong>Phone:</strong> <a href="tel:+19048559635" data-phone-link data-phone-text>904-855-9635</a></li>
+    <li><strong>Phone:</strong> <a href="tel:+19048559635" data-phone-link data-phone-text>904-855-9635</a> <button type="button" class="copy-btn" data-copy="phone" aria-label="Copy phone number" hidden>Copy</button></li>
     <li class="contact-wa"><a class="btn btn-wa" href="https://wa.me/19048559635?text=Hi!%20I'd%20like%20a%20free%20estimate%20for%20a%20painting%2Fremodeling%20project%20in%20Jacksonville." data-wa target="_blank" rel="noopener"><svg class="wa-ico" viewBox="0 0 32 32" width="24" height="24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16.01 3C8.83 3 3 8.82 3 16c0 2.29.6 4.52 1.74 6.49L3 29l6.68-1.7A12.97 12.97 0 0 0 16.01 29C23.18 29 29 23.18 29 16S23.18 3 16.01 3Zm0 23.7c-1.95 0-3.86-.53-5.53-1.52l-.4-.24-3.96 1.01 1.06-3.86-.26-.4A10.66 10.66 0 0 1 5.3 16c0-5.9 4.81-10.7 10.71-10.7S26.7 10.1 26.7 16s-4.8 10.7-10.69 10.7Zm5.87-8.01c-.32-.16-1.9-.94-2.2-1.05-.29-.11-.5-.16-.72.16-.21.32-.83 1.05-1.02 1.26-.19.21-.37.24-.7.08-.32-.16-1.36-.5-2.59-1.6-.96-.85-1.6-1.9-1.79-2.22-.19-.32-.02-.5.14-.66.14-.14.32-.37.48-.56.16-.19.21-.32.32-.54.11-.21.05-.4-.03-.56-.08-.16-.72-1.74-.99-2.38-.26-.62-.52-.54-.72-.55h-.61c-.21 0-.56.08-.85.4-.29.32-1.12 1.09-1.12 2.66s1.15 3.09 1.31 3.3c.16.21 2.26 3.45 5.47 4.84.76.33 1.36.53 1.83.68.77.24 1.47.21 2.02.13.62-.09 1.9-.78 2.17-1.53.27-.75.27-1.4.19-1.53-.08-.13-.29-.21-.61-.37Z"/></svg>WhatsApp</a></li>
     <li id="email-item" hidden><strong>Email:</strong> <a href="#"></a></li>
     <li hidden><strong>Follow us:</strong><ul id="social-list" style="display:flex;gap:14px;flex-wrap:wrap;margin-top:6px"></ul></li>
     <li class="lic" data-lic-number>Licensed &amp; Insured</li>
    </ul>
   </div>
-  <form class="form" id="quote-form" method="post" novalidate>
-   <div class="row">
-    <div><label for="f-name">Full name *</label><input id="f-name" name="name" type="text" autocomplete="name" required></div>
-    <div><label for="f-phone">Phone *</label><input id="f-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required></div>
-   </div>
-   <div class="row">
-    <div><label for="f-email">Email (optional)</label><input id="f-email" name="email" type="email" autocomplete="email"></div>
-    <div><label for="f-zip">ZIP code</label><input id="f-zip" name="zip" type="text" inputmode="numeric" pattern="[0-9]{5}" maxlength="5" autocomplete="postal-code"></div>
-   </div>
-   <div><label for="f-service">Service *</label><select id="f-service" name="service" required><option value="">Choose a service</option><option value="Interior painting">Interior painting</option><option value="Exterior painting">Exterior painting</option><option value="Drywall">Drywall</option><option value="Flooring">Flooring</option><option value="Bathroom remodeling">Bathroom remodeling</option><option value="Kitchen remodeling">Kitchen remodeling</option><option value="Decks">Decks</option><option value="Electrical (licensed subcontractors)">Electrical (licensed subcontractors)</option><option value="Other / not sure">Other / not sure</option></select></div>
-   <div><label for="f-msg">Project description</label><textarea id="f-msg" name="message"></textarea></div>
-   <div class="hp" aria-hidden="true"><label for="f-bot">Leave this field empty</label><input id="f-bot" name="botcheck" type="text" tabindex="-1" autocomplete="off"></div>
-   <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
-   <button class="btn btn-dark" type="submit">Send request</button>
-   <p class="fine" style="margin:0">Fields marked * are required.</p>
-  </form>
+  <div class="quote-col">
+   <form class="wizard" id="wizard" method="post" novalidate aria-labelledby="wiz-title" hidden>
+    <div class="wiz-head"><h3 id="wiz-title">Estimate in 4 steps</h3><p class="wiz-count" id="wiz-count" aria-live="polite"></p></div>
+    <div class="wiz-bar" role="presentation" aria-hidden="true"><i id="wiz-fill"></i></div>
+    <ol class="wiz-dots" aria-hidden="true"><li>Service</li><li>Details</li><li>Timing</li><li>Contact</li></ol>
+    <p class="wiz-errsum" id="wiz-errsum" role="alert" hidden></p>
+    <div class="wiz-body" id="wiz-body">
+     <fieldset class="wiz-step" data-step="1"><legend tabindex="-1">What do you need done?</legend><p class="fine">Choose one.</p><div class="tiles"><label class="tile"><input type="radio" name="service" value="Interior painting" data-k="interior"><span class="tile-in"><svg class="ico" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect pathLength="1" x="4" y="3" width="13" height="5" rx="1.5"/><path pathLength="1" d="M17 5.5h2.5v5H11v3"/><rect pathLength="1" x="9.5" y="13.5" width="3" height="7" rx="1"/></svg><span class="tile-t">Interior painting</span></span></label><label class="tile"><input type="radio" name="service" value="Exterior painting" data-k="exterior"><span class="tile-in"><svg class="ico" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path pathLength="1" d="M3 11l9-7 9 7"/><path pathLength="1" d="M5.5 9.5V20h13V9.5"/><path pathLength="1" d="M10 20v-5h4v5"/></svg><span class="tile-t">Exterior painting</span></span></label><label class="tile"><input type="radio" name="service" value="Drywall" data-k="drywall"><span class="tile-in"><svg class="ico" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect pathLength="1" x="3.5" y="4" width="17" height="16" rx="1.5"/><path pathLength="1" d="M3.5 12h17M12 4v8M8 12v8M16 12v8"/></svg><span class="tile-t">Drywall</span></span></label><label class="tile"><input type="radio" name="service" value="Flooring" data-k="flooring"><span class="tile-in"><svg class="ico" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path pathLength="1" d="M3 8l9-4 9 4-9 4z"/><path pathLength="1" d="M3 12l9 4 9-4"/><path pathLength="1" d="M3 16l9 4 9-4"/></svg><span class="tile-t">Flooring</span></span></label><label class="tile"><input type="radio" name="service" value="Bathroom remodeling" data-k="bathroom"><span class="tile-in"><svg class="ico" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path pathLength="1" d="M4 12h16v3a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><path pathLength="1" d="M6 12V6a2 2 0 0 1 4 0"/><path pathLength="1" d="M7 19l-1 2M17 19l1 2"/></svg><span class="tile-t">Bathroom remodeling</span></span></label><label class="tile"><input type="radio" name="service" value="Kitchen remodeling" data-k="kitchen"><span class="tile-in"><svg class="ico" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect pathLength="1" x="4" y="3" width="16" height="18" rx="1.5"/><path pathLength="1" d="M4 12h16M8 7h3M13 7h3M8 16h3M13 16h3"/></svg><span class="tile-t">Kitchen remodeling</span></span></label><label class="tile"><input type="radio" name="service" value="Decks" data-k="decks"><span class="tile-in"><svg class="ico" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path pathLength="1" d="M3 5h18M3 10h18M3 14h18M3 18h18"/><path pathLength="1" d="M6 10v10M18 10v10"/></svg><span class="tile-t">Decks</span></span></label><label class="tile"><input type="radio" name="service" value="Electrical work" data-k="electrical"><span class="tile-in"><svg class="ico" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path pathLength="1" d="M13 2L5 13.5h6L10 22l9-12h-6z"/></svg><span class="tile-t">Electrical work</span></span></label><label class="tile"><input type="radio" name="service" value="Other / not sure" data-k="other"><span class="tile-in"><svg class="ico" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle pathLength="1" cx="12" cy="12" r="9"/><path pathLength="1" d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01"/></svg><span class="tile-t">Other / not sure</span></span></label></div><p class="err" id="service-err" hidden></p></fieldset>
+     <fieldset class="wiz-step" data-step="2"><legend tabindex="-1">About the property</legend><div class="grp" role="radiogroup" aria-label="Property type"><p class="grp-l">Property type</p><div class="pills"><label class="pill"><input type="radio" name="ptype" value="Residential"><span>Residential</span></label><label class="pill"><input type="radio" name="ptype" value="Commercial"><span>Commercial</span></label></div><p class="err" id="ptype-err" hidden></p></div><div class="grp" role="radiogroup" aria-label="Approximate size"><p class="grp-l">Approximate size</p><div class="opts"><label class="opt"><input type="radio" name="size" value="Small"><span class="opt-in"><strong>Small</strong><small>One room or one area</small></span></label><label class="opt"><input type="radio" name="size" value="Medium"><span class="opt-in"><strong>Medium</strong><small>A few rooms or areas</small></span></label><label class="opt"><input type="radio" name="size" value="Large"><span class="opt-in"><strong>Large</strong><small>Most of the property</small></span></label><label class="opt"><input type="radio" name="size" value="Not sure yet"><span class="opt-in"><strong>Not sure yet</strong><small>We can help estimate</small></span></label></div><p class="err" id="size-err" hidden></p></div></fieldset>
+     <fieldset class="wiz-step" data-step="3"><legend tabindex="-1">Timing and location</legend><div class="grp" role="radiogroup" aria-label="How soon do you want to start?"><p class="grp-l">How soon do you want to start?</p><div class="opts"><label class="opt"><input type="radio" name="urgency" value="As soon as possible"><span class="opt-in"><strong>As soon as possible</strong></span></label><label class="opt"><input type="radio" name="urgency" value="Within a month or so"><span class="opt-in"><strong>Within a month or so</strong></span></label><label class="opt"><input type="radio" name="urgency" value="Just planning ahead"><span class="opt-in"><strong>Just planning ahead</strong></span></label></div><p class="err" id="urgency-err" hidden></p></div><div class="row"><div class="fld"><input id="w-city" name="city" type="text" placeholder=" " autocomplete="address-level2"><label for="w-city">City (optional)</label><p class="err" id="w-city-err" hidden></p></div><div class="fld"><input id="w-zip" name="zip" type="text" placeholder=" " autocomplete="postal-code" inputmode="numeric" maxlength="5" pattern="[0-9]{5}"><label for="w-zip">ZIP code (optional)</label><p class="err" id="w-zip-err" hidden></p></div></div></fieldset>
+     <fieldset class="wiz-step" data-step="4"><legend tabindex="-1">How can we reach you?</legend><div class="fld"><input id="w-name" name="name" type="text" placeholder=" " autocomplete="name" required><label for="w-name">Full name *</label><p class="err" id="w-name-err" hidden></p></div><div class="fld"><input id="w-phone" name="phone" type="tel" placeholder=" " autocomplete="tel" inputmode="tel" required><label for="w-phone">Phone *</label><p class="err" id="w-phone-err" hidden></p></div><div class="fld"><input id="w-email" name="email" type="email" placeholder=" " autocomplete="email"><label for="w-email">Email (optional)</label><p class="err" id="w-email-err" hidden></p></div><div class="hp" aria-hidden="true"><label for="w-bot">Leave this field empty</label><input id="w-bot" name="botcheck" type="text" tabindex="-1" autocomplete="off"></div></fieldset>
+     <div class="wiz-summary" id="wiz-summary" hidden tabindex="-1"></div>
+    </div>
+    <p class="form-status" id="wiz-status" role="status" aria-live="polite"></p>
+    <div class="wiz-nav"><button type="button" class="btn btn-ghost" id="wiz-back" hidden>Back</button><button type="submit" class="btn btn-dark" id="wiz-next">Next</button></div>
+    <p class="fine wiz-alt"><button type="button" class="linkbtn" id="show-quick" aria-expanded="false" aria-controls="quote-form">Prefer to write a message instead?</button></p>
+   </form>
+   <form class="form" id="quote-form" method="post" novalidate>
+    <h3 class="form-title">Quick message</h3>
+    <div class="row"><div class="fld"><input id="f-name" name="name" type="text" placeholder=" " autocomplete="name" required><label for="f-name">Full name *</label><p class="err" id="f-name-err" hidden></p></div><div class="fld"><input id="f-phone" name="phone" type="tel" placeholder=" " autocomplete="tel" inputmode="tel" required><label for="f-phone">Phone *</label><p class="err" id="f-phone-err" hidden></p></div></div>
+    <div class="row"><div class="fld"><input id="f-email" name="email" type="email" placeholder=" " autocomplete="email"><label for="f-email">Email (optional)</label><p class="err" id="f-email-err" hidden></p></div><div class="fld"><input id="f-zip" name="zip" type="text" placeholder=" " autocomplete="postal-code" inputmode="numeric" pattern="[0-9]{5}" maxlength="5"><label for="f-zip">ZIP code</label><p class="err" id="f-zip-err" hidden></p></div></div>
+    <div class="fld fld-select"><select id="f-service" name="service" required><option value="" disabled selected hidden></option><option value="Interior painting">Interior painting</option><option value="Exterior painting">Exterior painting</option><option value="Drywall">Drywall</option><option value="Flooring">Flooring</option><option value="Bathroom remodeling">Bathroom remodeling</option><option value="Kitchen remodeling">Kitchen remodeling</option><option value="Decks">Decks</option><option value="Electrical (licensed subcontractors)">Electrical (licensed subcontractors)</option><option value="Other / not sure">Other / not sure</option></select><label for="f-service">Service *</label><p class="err" id="f-service-err" hidden></p></div>
+    <div class="fld"><textarea id="f-msg" name="message" placeholder=" " rows="4"></textarea><label for="f-msg">Project description</label><p class="err" id="f-msg-err" hidden></p></div>
+    <div class="hp" aria-hidden="true"><label for="f-bot">Leave this field empty</label><input id="f-bot" name="botcheck" type="text" tabindex="-1" autocomplete="off"></div>
+    <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+    <button class="btn btn-dark" type="submit">Send request</button>
+    <p class="fine" style="margin:0">Fields marked * are required.</p>
+    <p class="fine wiz-alt"><button type="button" class="linkbtn" id="show-wizard" hidden>Use the 4-step estimate instead</button></p>
+   </form>
+  </div>
  </div>
 </section>
 </main>
-
 <footer class="site-footer">
  <div class="container">
   <div class="footer-grid">
@@ -189,12 +209,15 @@
    <div><h3>Explore</h3><ul><li><a href="#services">Services</a></li><li><a href="#gallery">Gallery</a></li><li><a href="#process">Process</a></li><li><a href="#why">Why us</a></li><li><a href="#areas">Areas</a></li><li><a href="#reviews">Reviews</a></li><li><a href="#faq">FAQ</a></li><li><a href="#contact">Contact</a></li></ul></div>
    <div><h3>Contact</h3><ul>
     <li><a href="tel:+19048559635" data-phone-link data-phone-text>904-855-9635</a></li>
-    <li><a href="es/" hreflang="es">Español</a></li></ul></div>
+    <li><a href="es/" hreflang="es">Español</a></li>
+    <li><button type="button" class="linkbtn on-dark-btn" id="cursor-toggle" aria-pressed="true" hidden data-on="Custom cursor: on" data-off="Custom cursor: off">Custom cursor: on</button></li></ul></div>
   </div>
   <p class="copy">&copy; <span id="yr">2026</span> All In One Painting &amp; Remodeling Group LLC. All rights reserved.</p>
  </div>
 </footer>
+<div class="cta-bar" id="cta-bar"><a class="cta-i" href="tel:+19048559635" data-phone-link><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg><span>Call</span></a><a class="cta-i cta-wa" href="https://wa.me/19048559635?text=Hi!%20I'd%20like%20a%20free%20estimate%20for%20a%20painting%2Fremodeling%20project%20in%20Jacksonville." data-wa target="_blank" rel="noopener"><svg class="wa-ico" viewBox="0 0 32 32" width="20" height="20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16.01 3C8.83 3 3 8.82 3 16c0 2.29.6 4.52 1.74 6.49L3 29l6.68-1.7A12.97 12.97 0 0 0 16.01 29C23.18 29 29 23.18 29 16S23.18 3 16.01 3Zm0 23.7c-1.95 0-3.86-.53-5.53-1.52l-.4-.24-3.96 1.01 1.06-3.86-.26-.4A10.66 10.66 0 0 1 5.3 16c0-5.9 4.81-10.7 10.71-10.7S26.7 10.1 26.7 16s-4.8 10.7-10.69 10.7Zm5.87-8.01c-.32-.16-1.9-.94-2.2-1.05-.29-.11-.5-.16-.72.16-.21.32-.83 1.05-1.02 1.26-.19.21-.37.24-.7.08-.32-.16-1.36-.5-2.59-1.6-.96-.85-1.6-1.9-1.79-2.22-.19-.32-.02-.5.14-.66.14-.14.32-.37.48-.56.16-.19.21-.32.32-.54.11-.21.05-.4-.03-.56-.08-.16-.72-1.74-.99-2.38-.26-.62-.52-.54-.72-.55h-.61c-.21 0-.56.08-.85.4-.29.32-1.12 1.09-1.12 2.66s1.15 3.09 1.31 3.3c.16.21 2.26 3.45 5.47 4.84.76.33 1.36.53 1.83.68.77.24 1.47.21 2.02.13.62-.09 1.9-.78 2.17-1.53.27-.75.27-1.4.19-1.53-.08-.13-.29-.21-.61-.37Z"/></svg><span>WhatsApp</span></a><a class="cta-i cta-est" href="#contact"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h7M9 8h3"/></svg><span>Estimate</span></a></div>
 <a class="wa-float" href="https://wa.me/19048559635?text=Hi!%20I'd%20like%20a%20free%20estimate%20for%20a%20painting%2Fremodeling%20project%20in%20Jacksonville." data-wa target="_blank" rel="noopener" aria-label="Chat on WhatsApp"><svg class="wa-ico" viewBox="0 0 32 32" width="30" height="30" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16.01 3C8.83 3 3 8.82 3 16c0 2.29.6 4.52 1.74 6.49L3 29l6.68-1.7A12.97 12.97 0 0 0 16.01 29C23.18 29 29 23.18 29 16S23.18 3 16.01 3Zm0 23.7c-1.95 0-3.86-.53-5.53-1.52l-.4-.24-3.96 1.01 1.06-3.86-.26-.4A10.66 10.66 0 0 1 5.3 16c0-5.9 4.81-10.7 10.71-10.7S26.7 10.1 26.7 16s-4.8 10.7-10.69 10.7Zm5.87-8.01c-.32-.16-1.9-.94-2.2-1.05-.29-.11-.5-.16-.72.16-.21.32-.83 1.05-1.02 1.26-.19.21-.37.24-.7.08-.32-.16-1.36-.5-2.59-1.6-.96-.85-1.6-1.9-1.79-2.22-.19-.32-.02-.5.14-.66.14-.14.32-.37.48-.56.16-.19.21-.32.32-.54.11-.21.05-.4-.03-.56-.08-.16-.72-1.74-.99-2.38-.26-.62-.52-.54-.72-.55h-.61c-.21 0-.56.08-.85.4-.29.32-1.12 1.09-1.12 2.66s1.15 3.09 1.31 3.3c.16.21 2.26 3.45 5.47 4.84.76.33 1.36.53 1.83.68.77.24 1.47.21 2.02.13.62-.09 1.9-.78 2.17-1.53.27-.75.27-1.4.19-1.53-.08-.13-.29-.21-.61-.37Z"/></svg><span class="wa-label" aria-hidden="true">Chat on WhatsApp</span></a>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="site-config.js"></script>
 <script src="assets/js/gallery-data.js"></script>
 <script src="assets/js/main.js"></script>
