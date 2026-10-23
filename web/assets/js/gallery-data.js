@@ -12,7 +12,11 @@
      caption: { en: "Deck build", es: "Construcción de deck" }, category: "exterior" }
    Paths are relative to the site root (the Spanish page adds "../" automatically).
    Las rutas son relativas a la raíz del sitio (la página en español agrega "../" sola). */
-window.GALLERY_ITEMS = [];
+window.GALLERY_ITEMS = [
+  { type: "video", src: "assets/gallery/allin1.mp4", poster: "assets/gallery/allin1-poster.jpg",
+    alt: { en: "Crew member working on the exterior siding and trim of a house", es: "Trabajador en el exterior de una casa, trabajando en el revestimiento y el acabado" },
+    caption: { en: "Exterior project", es: "Proyecto exterior" }, category: "exterior" }
+];
 
 /* Filter categories / Categorías del filtro (the "All" button is added automatically). */
 window.GALLERY_CATEGORIES = [
