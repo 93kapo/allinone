@@ -578,3 +578,12 @@ html.hammer-on input:not([type=range]):not([type=checkbox]):not([type=radio]):no
   .intro,.cursor{display:none!important}
   .main-nav li{opacity:1;translate:none}
 }
+
+/* Service area map */
+.areas-grid{display:grid;grid-template-columns:1fr 1.15fr;gap:32px;align-items:center}
+.areas-text{min-width:0}
+.map-card{margin:0;min-width:0}
+.map-card .map{display:block;width:100%;aspect-ratio:4/3;min-height:300px;border:1px solid var(--line);border-radius:18px;background:#e7eef0;box-shadow:0 8px 28px rgba(18,51,58,.12)}
+.map-card figcaption{margin-top:10px;font-size:.92rem;text-align:right}
+.map-card figcaption a{color:var(--slate-dark);font-weight:600;text-underline-offset:3px}
+@media (max-width:860px){.areas-grid{grid-template-columns:1fr;gap:24px}.map-card figcaption{text-align:left}}
