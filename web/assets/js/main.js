@@ -831,25 +831,67 @@
     }
   });
 
-  /* Custom cursor: fine pointer only, never with reduced motion, can be switched off */
+  /* Custom cursor = a hammer. Fine pointer only, never with reduced motion, can be switched off.
+     The native cursor is hidden only while the hammer is active (after the first mouse move). Text fields keep the native I-beam. */
   safe('cursor', function () {
     if (!fine || reduce) return;
     var KEY = 'aio-cursor', on = true;
     try { on = localStorage.getItem(KEY) !== 'off'; } catch (e) { /* ignore */ }
-    var tg = $('#cursor-toggle'), c = null, x = 0, y = 0, pend = false;
-    function sync() { if (tg) { tg.setAttribute('aria-pressed', on ? 'true' : 'false'); tg.textContent = on ? tg.dataset.on : tg.dataset.off; } if (c) { c.hidden = !on; if (!on) c.classList.remove('is-on'); } }
-    c = mk('div', 'cursor'); c.setAttribute('aria-hidden', 'true'); body.appendChild(c);
+    var root = doc.documentElement, tg = $('#cursor-toggle'), c = mk('div', 'cursor'), x = -100, y = -100, pend = false, seen = false;
+    var link = false, want = false, timer = 0;
+    var LINK = 'a,button,select,label,summary,[role=button],.ba,input[type=range],input[type=checkbox],input[type=radio]';
+    var TEXT = 'input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]),textarea,select,[contenteditable=true]';
+    c.setAttribute('aria-hidden', 'true');
+    c.innerHTML = '<svg class="hammer" viewBox="0 0 40 40" width="40" height="40" fill="none" focusable="false"><g stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M15 15 L35 35" stroke="#fff" stroke-width="8.5"/><path d="M15 15 L35 35" stroke="#8A5A2B" stroke-width="5"/>' +
+      '<g transform="translate(11 11) rotate(-45)"><rect x="-11" y="-6" width="22" height="12" rx="3" fill="#fff" stroke="#fff" stroke-width="3"/>' +
+      '<rect x="-11" y="-6" width="22" height="12" rx="3" fill="#38C0D9" stroke="#12333A" stroke-width="1.8"/><rect x="-11" y="-6" width="5" height="12" rx="2" fill="#12333A"/></g></g></svg>';
+    body.appendChild(c);
+    var ham = c.firstChild;
+    function sync() {
+      if (tg) { tg.setAttribute('aria-pressed', on ? 'true' : 'false'); tg.textContent = on ? tg.dataset.on : tg.dataset.off; }
+      c.hidden = !on; root.classList.toggle('hammer-on', on && seen);
+      if (!on) c.classList.remove('is-on');
+    }
     if (tg) { tg.hidden = false; tg.addEventListener('click', function () { on = !on; try { localStorage.setItem(KEY, on ? 'on' : 'off'); } catch (e) { /* ignore */ } sync(); }); }
     sync();
+    /* hover state with a short delay so magnetic buttons moving under the pointer cannot make it flicker */
+    function setLink(v) {
+      if (v === want) return; want = v; clearTimeout(timer);
+      if (want === link) return;
+      timer = setTimeout(function () { link = want; c.classList.toggle('is-link', link); }, 50);
+    }
     doc.addEventListener('pointermove', function (e) {
       if (!on || e.pointerType === 'touch') return;
+      if (!seen) { seen = true; sync(); }
       x = e.clientX; y = e.clientY; c.classList.add('is-on');
       if (!pend) { pend = true; raf(function () { pend = false; c.style.transform = 'translate3d(' + x + 'px,' + y + 'px,0)'; }); }
-      c.classList.toggle('is-link', !!(e.target.closest && e.target.closest('a,button,input,select,textarea,label,summary,[role=button],.ba')));
+      var t = e.target, el = t && t.closest ? t : null;
+      c.classList.toggle('is-text', !!(el && el.closest(TEXT)));
+      setLink(!!(el && el.closest(LINK)));
     }, { passive: true });
-    doc.addEventListener('pointerdown', function () { c.classList.add('is-down'); }, { passive: true });
-    doc.addEventListener('pointerup', function () { c.classList.remove('is-down'); }, { passive: true });
-    doc.documentElement.addEventListener('mouseleave', function () { c.classList.remove('is-on'); });
+    function strike() {
+      var px = x, py = y;
+      if (ham.animate) ham.animate([
+        { transform: 'rotate(-38deg) scale(1.08)' }, { transform: 'rotate(-38deg) scale(1.08)', offset: .18 },
+        { transform: 'rotate(14deg) scale(.96)', offset: .42 }, { transform: 'rotate(0deg) scale(1)' }
+      ], { duration: 360, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      var ring = mk('i', 'hit'); ring.style.left = px + 'px'; ring.style.top = py + 'px'; body.appendChild(ring);
+      if (ring.animate) ring.animate([{ transform: 'scale(.25)', opacity: 0 }, { transform: 'scale(.5)', opacity: .95, offset: .25 }, { transform: 'scale(1.5)', opacity: 0 }],
+        { duration: 420, delay: 120, easing: 'ease-out', fill: 'backwards' }).onfinish = function () { ring.remove(); };
+      else ring.remove();
+      for (var i = 0; i < 6; i++) {
+        (function (a) {
+          var sp = mk('i', 'spark'); sp.style.left = px + 'px'; sp.style.top = py + 'px'; body.appendChild(sp);
+          var dx = Math.cos(a) * 24, dy = Math.sin(a) * 24;
+          if (sp.animate) sp.animate([{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.2)', opacity: 0 }],
+            { duration: 380, delay: 130, easing: 'ease-out', fill: 'backwards' }).onfinish = function () { sp.remove(); };
+          else sp.remove();
+        })(i * Math.PI / 3 + .3);
+      }
+    }
+    doc.addEventListener('pointerdown', function (e) { if (on && seen && e.pointerType !== 'touch' && e.button === 0 && !c.classList.contains('is-text')) strike(); }, { passive: true });
+    doc.documentElement.addEventListener('mouseleave', function () { c.classList.remove('is-on'); root.classList.remove('hammer-on'); seen = false; });
   });
 
   window.__motionReady = true;

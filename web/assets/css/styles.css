@@ -478,11 +478,16 @@ body.nav-open .wa-float{opacity:0;pointer-events:none;transform:translateY(12px)
 .toast.show{opacity:1;translate:-50% 0;visibility:visible;transition-delay:0s}
 @media (min-width:900px){.toast{bottom:28px}}
 
-/* Custom cursor (fine pointer only; JS adds) */
-.cursor{position:fixed;left:0;top:0;width:34px;height:34px;margin:-17px 0 0 -17px;border:2px solid var(--teal);border-radius:50%;pointer-events:none;z-index:600;opacity:0;transition:opacity var(--dur-fast),scale var(--dur-fast) var(--ease),background-color var(--dur-fast);will-change:transform}
-.cursor.is-on{opacity:.85}
-.cursor.is-link{scale:1.6;background:rgba(56,192,217,.18)}
-.cursor.is-down{scale:.8}
+/* Custom cursor: a hammer (fine pointer only; JS adds). The native cursor is hidden only while it is active. */
+.cursor{position:fixed;left:0;top:0;width:0;height:0;pointer-events:none;z-index:2147483000;opacity:0;transition:opacity var(--dur-fast);will-change:transform}
+.cursor.is-on{opacity:1}
+.cursor.is-text{opacity:0}
+.cursor .hammer{position:absolute;left:-3px;top:-19px;width:40px;height:40px;max-width:none;display:block;transform-origin:34px 34px;transition:transform .16s var(--ease);filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
+.cursor.is-link .hammer{transform:rotate(-24deg) scale(1.1)}
+html.hammer-on,html.hammer-on *{cursor:none!important}
+html.hammer-on input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]),html.hammer-on textarea,html.hammer-on select,html.hammer-on [contenteditable=true]{cursor:text!important}
+.hit{position:fixed;width:44px;height:44px;margin:-22px 0 0 -22px;border:3px solid var(--teal);border-radius:50%;pointer-events:none;z-index:2147483000;opacity:0}
+.spark{position:fixed;width:7px;height:7px;margin:-3px 0 0 -3px;border-radius:50%;background:var(--teal);pointer-events:none;z-index:2147483000;opacity:0}
 
 /* ---------- Motion-enabled states (JS + no reduced motion) ---------- */
 @media (prefers-reduced-motion:no-preference){
