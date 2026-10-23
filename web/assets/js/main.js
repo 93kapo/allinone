@@ -318,6 +318,7 @@
         var before = new Map();
         figs.forEach(function (f) { if (!f.hidden) before.set(f, f.getBoundingClientRect()); });
         figs.forEach(function (f) { f.hidden = !(cat === 'all' || f.dataset.cat === cat); f.classList.add('in'); });
+        if (gempty) gempty.hidden = figs.some(function (f) { return !f.hidden; });
         if (!canAnim) return;
         figs.forEach(function (f) {
           if (f.hidden) return;
@@ -333,9 +334,11 @@
         setTimeout(function () { leaving.forEach(function (f) { f.getAnimations().forEach(function (a) { a.cancel(); }); }); go(); }, 190);
       } else go();
     }
-    if (fbox && used.length > 1) {
+    var realItems = items.some(function (it) { return !it.ph; });
+    var gempty = $('#g-empty');
+    if (fbox && (used.length > 1 || (realItems && cats.length > 1))) {
       var btns = [];
-      [{ id: 'all', label: { en: 'All', es: 'Todos' } }].concat(used).forEach(function (c, i) {
+      [{ id: 'all', label: { en: 'All', es: 'Todos' } }].concat(realItems ? cats : used).forEach(function (c, i) {
         var b = mk('button', 'fbtn'); b.type = 'button'; b.textContent = c.label[lang] || c.label.en; b.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
         b.addEventListener('click', function () { btns.forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); applyFilter(c.id); });
         fbox.appendChild(b); btns.push(b);
