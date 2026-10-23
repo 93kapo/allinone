@@ -30,7 +30,11 @@ window.GALLERY_CATEGORIES = [
    { before: "assets/gallery/bath-before.webp", after: "assets/gallery/bath-after.webp",
      alt: { en: "Bathroom before and after", es: "Baño antes y después" },
      caption: { en: "Bathroom update", es: "Renovación de baño" } } */
-window.BEFORE_AFTER = [];
+window.BEFORE_AFTER = [
+  { before: "assets/gallery/ba-1-before.jpg", after: "assets/gallery/ba-1-after.jpg",
+    alt: { en: "Exterior wood louvers before and after refinishing", es: "Persianas de madera exteriores antes y después del acabado" },
+    caption: { en: "Exterior wood finishing", es: "Acabado de madera exterior" } }
+];
 
 /* Number of placeholder tiles shown while GALLERY_ITEMS is empty
    (they cycle through the categories above so the filter works). */

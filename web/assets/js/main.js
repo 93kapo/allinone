@@ -840,7 +840,7 @@
     var root = doc.documentElement, tg = $('#cursor-toggle'), c = mk('div', 'cursor'), x = -100, y = -100, pend = false, seen = false;
     var link = false, want = false, timer = 0;
     var LINK = 'a,button,select,label,summary,[role=button],.ba,input[type=range],input[type=checkbox],input[type=radio]';
-    var TEXT = 'input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]),textarea,select,[contenteditable=true]';
+    var TEXT = 'input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]),textarea,select,[contenteditable=true],video,audio,iframe';
     c.setAttribute('aria-hidden', 'true');
     c.innerHTML = '<svg class="hammer" viewBox="0 0 40 40" width="40" height="40" fill="none" focusable="false"><g stroke-linecap="round" stroke-linejoin="round">' +
       '<path d="M15 15 L35 35" stroke="#fff" stroke-width="8.5"/><path d="M15 15 L35 35" stroke="#8A5A2B" stroke-width="5"/>' +
@@ -870,6 +870,11 @@
       c.classList.toggle('is-text', !!(el && el.closest(TEXT)));
       setLink(!!(el && el.closest(LINK)));
     }, { passive: true });
+    /* Embedded maps/videos receive the pointer events themselves: give the native cursor back while the pointer is over them */
+    Array.prototype.forEach.call(doc.querySelectorAll('iframe'), function (fr) {
+      fr.addEventListener('mouseenter', function () { c.classList.add('is-text'); });
+      fr.addEventListener('mouseleave', function () { c.classList.remove('is-text'); });
+    });
     function strike() {
       var px = x, py = y;
       if (ham.animate) ham.animate([
