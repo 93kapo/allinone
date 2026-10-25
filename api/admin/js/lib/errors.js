@@ -20,12 +20,3 @@ export function apiErrorMessage({ status = 0, body = null, network = false } = {
     default: return status >= 500 ? t('err5xx') : t('errGeneric');
   }
 }
-
-// Errores de inicio de sesión: genéricos, sin revelar si el correo existe.
-export function authErrorMessage(code) {
-  switch (code) {
-    case 'auth/too-many-requests': return t('loginTooMany');
-    case 'auth/network-request-failed': return t('loginNetwork');
-    default: return t('loginBad');
-  }
-}

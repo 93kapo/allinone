@@ -8,7 +8,7 @@ import { app, go, render, updateBar, announce } from './app.js';
 import { S, setBase, normalize, loadDraft, clearDraft, saveNow, saveDraft, notify } from './store.js';
 import { createApi } from './api.js';
 import { apiErrorMessage } from './lib/errors.js';
-import { hooks } from './screens-auth.js';
+import { hooks, savedEmail, forgetEmail } from './screens-auth.js';
 import './screens-gallery.js';
 import './screens-ba.js';
 import './screens-forms.js';
@@ -46,10 +46,18 @@ async function loadAll() {
 app.reload = loadAll;
 
 let entered = '';
+let linkPending = false;
+let loginError = '';
+
+hooks.completeLink = async (email) => {
+  const user = await app.auth.completeLink(email);
+  forgetEmail(); linkPending = false;
+  history.replaceState({}, '', location.pathname); // el enlace no debe quedarse en la barra
+  await hooks.enter(user);
+};
 hooks.enter = async (user) => {
   if (!user) { go('login'); return; }
   $('#signout').hidden = false;
-  if (!user.emailVerified) { go('verify'); return; }
   if (entered === user.email) return;
   entered = user.email; S.email = user.email;
   $('#signout').hidden = false;
@@ -77,8 +85,14 @@ async function boot() {
   S.listeners.add(updateBar);
   addEventListener('pagehide', () => { saveNow(); });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveNow(); });
+  if (auth.isLink()) {
+    linkPending = true;
+    const em = savedEmail();
+    if (em) { try { await hooks.completeLink(em); } catch { linkPending = false; loginError = t('linkBad'); history.replaceState({}, '', location.pathname); } } else go('confirm', {});
+  }
   auth.onChange((user) => {
-    if (!user) { entered = ''; S.state = null; $('#signout').hidden = true; go('login'); return; }
+    if (!user) { if (linkPending) return;
+      entered = ''; S.state = null; $('#signout').hidden = true; go('login', { error: loginError }); loginError = ''; return; }
     hooks.enter(user);
   });
 }

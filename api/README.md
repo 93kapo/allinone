@@ -52,7 +52,7 @@ npm run check       # wrangler deploy --dry-run: valida configuración y empaque
 
 ## Panel del dueño (`admin/`)
 
-JS plano con módulos ES, sin build. Firebase Auth (SDK 10.12.2 desde gstatic, solo correo y contraseña). `admin/js/schema.js` es una **copia exacta** de `src/schema.js` (una prueba lo exige: si cambia el esquema, copiar de nuevo) y se usa para validar en el navegador igual que el Worker.
+JS plano con módulos ES, sin build. Firebase Auth por **enlace al correo, sin contraseña** (`sendSignInLinkToEmail` / `signInWithEmailLink`; SDK 10.12.2 desde gstatic; el enlace vuelve a `https://admin.allin1jax.com/`, el correo se guarda en localStorage y si el enlace se abre en otro aparato se pide de nuevo). `admin/js/schema.js` es una **copia exacta** de `src/schema.js` (una prueba lo exige: si cambia el esquema, copiar de nuevo) y se usa para validar en el navegador igual que el Worker.
 
 ```
 npm run test:admin                 # módulos puros: enlaces de YouTube, tamaños, listas, validación, errores, modo de prueba
@@ -62,15 +62,15 @@ node test-admin/browser-check.mjs  # recorrido completo en Chrome sin pantalla (
 
 El modo `?mock=1` solo funciona en `localhost`; el módulo falso vive en `test-admin/mock/` (no se despliega). El contenido inicial (primera publicación) sale de `admin/seed.json`. Los items `video` antiguos no los acepta el esquema del Worker: el panel los muestra en solo lectura y los omite al publicar (lo avisa).
 
-Pendiente de decidir: las fotos que ya viven en el sitio (`assets/gallery/...`) no se pueden mostrar en el panel porque el CSP no permite imágenes de `https://allin1jax.com`; se ve un recuadro. Para verlas, agregar ese origen a `img-src` en `admin/_headers` y `src/http.js` y poner `SITE_IMG_BASE` en `admin/js/config.js`.
+El CSP permite imágenes de `https://allin1jax.com` y `https://www.allin1jax.com` (`img-src` en `admin/_headers` y `src/http.js`, una prueba exige que sean iguales) para ver las fotos ya publicadas (`SITE_IMG_BASE` en `admin/js/config.js`).
 
 ## PASOS HUMANOS (nada de esto se hizo desde el código)
 
 1. **Cloudflare**: crear el bucket R2 `allin1-media` (`npx wrangler r2 bucket create allin1-media`). Activar el **dominio personalizado `media.allin1jax.com`** en ese bucket (solo lectura pública). No activar `r2.dev`.
 2. **Secret**: `npx wrangler secret put ALLOWED_EMAILS` y pegar los correos separados por comas (por ejemplo `a@x.com,b@y.com`). Nunca en el repo.
 3. **Desplegar** (lo hace una persona, `npx wrangler deploy`) y luego añadir el dominio **`admin.allin1jax.com`** al Worker (Workers > allin1-api > Settings > Domains, o descomentar `routes` en `wrangler.jsonc`).
-4. **Firebase** (proyecto `allin1-d68ac`): Authentication > Settings > Authorized domains > añadir `admin.allin1jax.com`. Dejar activo solo correo y contraseña.
-5. **Usuarios**: crear en Firebase Authentication un usuario por persona (correo + contraseña propia, y verificar el correo: el Worker exige `email_verified`). Cada correo también debe estar en `ALLOWED_EMAILS`.
+4. **Firebase** (proyecto `allin1-d68ac`): Authentication > Sign-in method > activar **Correo electrónico/contraseña** con la opción **Vínculo de correo electrónico (acceso sin contraseña)**; Settings > Authorized domains > añadir `admin.allin1jax.com`.
+5. **Usuarios**: no hay que crearlos: con el enlace al correo Firebase crea la cuenta y marca `email_verified` (el Worker lo exige). Lo que decide el permiso es que el correo esté en `ALLOWED_EMAILS`.
 6. **WAF de Cloudflare — regla de rate limiting real** (por ejemplo `/api/*`: 60 peticiones por minuto por IP y `/api/upload`: 10 por minuto por IP). El limitador del Worker es solo en memoria de cada *isolate*: defensa mínima, no sustituye al WAF.
 7. **Facturación**: R2 y Workers tienen capa gratuita, pero pueden cobrar al pasarse. Poner alertas de facturación y de uso en Cloudflare. El tope `MAX_BUCKET_MB` cuenta solo los archivos de `media/` registrados en el manifiesto (no las versiones JSON, que son pequeñas).
 8. Cuando el panel real esté listo, reemplazar `admin/index.html` (marcador) y mantener `admin/_headers`. El CSP no permite estilos ni scripts en línea: usar archivos `.css` y `.js` propios.

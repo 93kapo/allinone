@@ -6,7 +6,7 @@ import { fitWithin, PHOTO_MAX, THUMB_MAX } from '../admin/js/lib/imagesize.js';
 import { makeId, addItem, moveUp, moveDown, toggleHidden, removeItem, updateItem, setCaption, ids } from '../admin/js/lib/listops.js';
 import { isMockAllowed } from '../admin/js/lib/mockgate.js';
 import { mediaUrl } from '../admin/js/lib/media-url.js';
-import { apiErrorMessage, authErrorMessage } from '../admin/js/lib/errors.js';
+import { apiErrorMessage } from '../admin/js/lib/errors.js';
 import { diffLists, describeDiff, hasChange } from '../admin/js/lib/changes.js';
 import { t } from '../admin/js/i18n.js';
 
@@ -144,12 +144,28 @@ test('errores de la API a español', () => {
   for (const s of [401, 403, 404, 409, 413, 415, 422, 428, 429, 503, 507, 500]) assert.doesNotMatch(m(s, 'publish'), /\{|undefined|Error|HTTP/);
 });
 
-test('errores de inicio de sesión: genéricos', () => {
-  const generic = authErrorMessage('auth/invalid-credential');
-  for (const c of ['auth/user-not-found', 'auth/wrong-password', 'auth/invalid-email', 'auth/user-disabled', undefined]) assert.equal(authErrorMessage(c), generic);
-  assert.doesNotMatch(generic, /no existe|no está registrado/i);
-  assert.notEqual(authErrorMessage('auth/too-many-requests'), generic);
-  assert.match(authErrorMessage('auth/network-request-failed'), /internet/);
+test('CSP del panel: _headers y Worker iguales, con las fotos del sitio', () => {
+  const hdr = readFileSync(new URL('../admin/_headers', import.meta.url), 'utf8').match(/Content-Security-Policy: (.*)/)[1].trim();
+  const src = readFileSync(new URL('../src/http.js', import.meta.url), 'utf8');
+  const parts = [...src.slice(src.indexOf('export const CSP'), src.indexOf('export const SECURITY_HEADERS')).matchAll(/"([^"]*)"/g)].map((m) => m[1]).join('');
+  assert.equal(parts, hdr);
+  assert.match(hdr, /img-src 'self' https:\/\/media\.allin1jax\.com https:\/\/allin1jax\.com https:\/\/www\.allin1jax\.com https:\/\/i\.ytimg\.com data: blob:/);
+  assert.doesNotMatch(hdr, /unsafe-inline|unsafe-eval/);
+});
+
+test('acceso sin contraseña: el panel no tiene campos de contraseña', () => {
+  for (const f of ['screens-auth.js', 'auth-real.js', 'main.js']) {
+    const s = readFileSync(new URL(`../admin/js/${f}`, import.meta.url), 'utf8');
+    assert.doesNotMatch(s, /type: 'password'|signInWithEmailAndPassword|sendPasswordResetEmail/, f);
+  }
+  const real = readFileSync(new URL('../admin/js/auth-real.js', import.meta.url), 'utf8');
+  for (const fn of ['sendSignInLinkToEmail', 'isSignInWithEmailLink', 'signInWithEmailLink']) assert.ok(real.includes(fn), fn);
+  assert.ok(real.includes('https://admin.allin1jax.com/'));
+});
+
+test('imágenes del sitio ya se pueden mostrar', () => {
+  const cfg = readFileSync(new URL('../admin/js/config.js', import.meta.url), 'utf8');
+  assert.match(cfg, /SITE_IMG_BASE = 'https:\/\/allin1jax\.com'/);
 });
 
 test('cambios entre listas', () => {

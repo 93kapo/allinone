@@ -9,7 +9,7 @@ const check = (name, ok, detail = '') => { results.push({ name, ok: !!ok, detail
 const b = await launch({ port: 9333 });
 // Imagen falsa para las miniaturas de YouTube (sin red real).
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64').toString('base64');
-await b.send('Fetch.enable', { patterns: [{ urlPattern: 'https://i.ytimg.com/*' }] });
+await b.send('Fetch.enable', { patterns: [{ urlPattern: 'https://i.ytimg.com/*' }, { urlPattern: 'https://allin1jax.com/*' }] });
 b.on('Fetch.requestPaused', (p) => {
   const bad = p.request.url.includes('/vi/BADBADBAD00/');
   b.send(bad ? 'Fetch.failRequest' : 'Fetch.fulfillRequest', bad ? { requestId: p.requestId, errorReason: 'Failed' } : { requestId: p.requestId, responseCode: 200, responseHeaders: [{ name: 'Content-Type', value: 'image/png' }], body: PNG }).catch(() => {});
@@ -68,41 +68,49 @@ try {
   await has('Entrar');
   await audit('login');
 
-  // ---- acceso ----
-  await b.eval(() => { document.getElementById('login-email').value = 'dueno@example.com'; document.getElementById('login-pw').value = 'mala'; });
-  await click('Entrar', 'button');
-  await has('no son correctos');
-  check('error de acceso genérico', !/no existe|registrado/i.test(await body()));
-  await click('¿Olvidó su contraseña?'); await has('Enviar mensaje');
-  await b.eval(() => { document.getElementById('reset-email').value = 'nadie@example.com'; });
-  await click('Enviar mensaje'); await has('Si ese correo está registrado');
-  check('restablecer: mensaje igual para cualquier correo', (await b.eval(() => window.__mockResets)).length === 1);
-  await click('Volver a Entrar'); await click('Crear mi contraseña'); await has('escoja su propia contraseña');
-  await audit('crear contraseña');
-  await click('Volver a Entrar');
-  check('inputs de acceso con autocomplete correcto', await b.eval(() => document.getElementById('login-email').autocomplete === 'username' && document.getElementById('login-pw').autocomplete === 'current-password'));
+  // ---- acceso sin contraseña ----
+  check('login: sin campo de contraseña', await b.eval(() => !document.querySelector('input[type=password]')));
+  check('login: autocomplete username', await b.eval(() => document.getElementById('login-email').autocomplete === 'username'));
+  check('login: sin "Olvidó/Crear contraseña"', !/Olvidó|Crear mi contraseña/.test(await body()));
+  await b.eval(() => { document.getElementById('login-email').value = ''; });
+  await click('Enviarme el enlace', 'button'); await has('Escriba su correo');
+  await b.eval(() => { document.getElementById('login-email').value = 'intruso@example.com'; });
+  await click('Enviarme el enlace', 'button'); await has('Revise su correo (también en Spam) y toque el enlace');
+  const msgA = await body();
+  await b.eval(() => { document.getElementById('login-email').value = 'nadie@example.com'; });
+  await click('Enviar otro enlace', 'button'); await b.sleep(200);
+  check('mismo mensaje para cualquier correo (no revela permiso)', (await body()) === msgA && (await b.eval(() => window.__mockLinks.length)) === 2);
+  check('correo guardado en localStorage', (await b.eval(() => localStorage.getItem('emailParaEnlace'))) === 'nadie@example.com');
+  await audit('login enviado');
 
-  // correo sin verificar
-  const login = async (email, pw = 'prueba123') => { await b.eval(`(() => { document.getElementById('login-email').value = ${JSON.stringify(email)}; document.getElementById('login-pw').value = ${JSON.stringify(pw)}; })()`); await click('Entrar', 'button'); };
-  await login('sinverificar@example.com');
-  await has('Revise su correo y confirme su dirección; luego vuelva a entrar');
-  check('envió correo de verificación', (await b.eval(() => window.__mockVerifications)) >= 1);
-  await click('Ya confirmé, entrar otra vez'); await has('Todavía no vemos');
-  await audit('verificar correo');
-  await click('Salir'); await has('Entrar');
-
-  // correo sin permiso (403)
-  await login('intruso@example.com');
+  // enlace abierto en el MISMO aparato (correo guardado) -> entra solo (usuario sin permiso: 403 al publicar)
+  await b.eval(() => localStorage.setItem('emailParaEnlace', 'intruso@example.com'));
+  await b.goto(`${BASE}/?mock=1&mockLink=intruso@example.com`);
   await has('Es la primera vez');
+  check('enlace: entra sin pedir correo y limpia la dirección', await b.eval(() => !location.search.includes('mockLink') && localStorage.getItem('emailParaEnlace') === null));
   await click('Fotos y videos'); await has('Video antiguo');
+  check('fotos existentes del sitio se ven (https://allin1jax.com permitido)', await b.waitFor(() => [...document.querySelectorAll('img.thumb')].some(i => i.src.startsWith('https://allin1jax.com/assets/gallery/') && i.complete && i.naturalWidth > 0)));
   await home(); await click('Publicar cambios'); await has('Publicar ahora'); await click('Publicar ahora');
   await has('Este correo no tiene permiso para editar la página');
   check('403 -> mensaje de permiso', true);
   await click('Seguir editando'); await click('Salir'); await has('Entrar');
   await b.eval(() => indexedDB.deleteDatabase('allin1-panel'));
 
+  // enlace abierto en OTRO aparato (sin correo guardado) -> pide el correo
+  await b.goto(`${BASE}/?mock=1&mockLink=dueno@example.com`);
+  await has('Confirme su correo');
+  await audit('confirmar correo');
+  await b.eval(() => { document.getElementById('confirm-email').value = 'otro@example.com'; });
+  await click('Entrar', 'button'); await has('Ese enlace ya no sirve');
+  await b.eval(() => { document.getElementById('confirm-email').value = 'dueno@example.com'; });
+  await click('Entrar', 'button'); await has('Es la primera vez');
+  check('otro aparato: correo correcto entra', await b.eval(() => !location.search.includes('mockLink')));
+  await click('Salir'); await has('Entrar');
+  await b.goto(`${BASE}/?mock=1&mockLink=dueno@example.com`);
+  await b.eval(() => { document.getElementById('confirm-email').value = 'dueno@example.com'; });
+  await click('Entrar', 'button');
+
   // ---- dueño ----
-  await login('dueno@example.com');
   await has('Es la primera vez');
   await audit('inicio');
   check('4 acciones grandes + atajos', await b.eval(() => document.querySelectorAll('.tile').length === 4 && [...document.querySelectorAll('.shortcuts button')].map(x => x.textContent).join('|') === 'Deshacer última publicación|Historial'));

@@ -2,6 +2,9 @@
 // initializeAuth (sin resolvedor de ventanas emergentes) evita cargar iframes/scripts que el CSP bloquea.
 import { firebaseConfig } from './firebase-config.js';
 
+// En producción el enlace apunta a https://admin.allin1jax.com/ (en pruebas locales, a localhost).
+const linkUrl = () => (location.hostname === 'localhost' ? `${location.origin}/` : 'https://admin.allin1jax.com/');
+
 export async function createAuth() {
   const [appMod, authMod] = await Promise.all([
     import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),
@@ -14,10 +17,10 @@ export async function createAuth() {
   return {
     mock: false,
     onChange(cb) { authMod.onAuthStateChanged(auth, (u) => cb(view(u))); },
-    async signIn(email, password) { const r = await authMod.signInWithEmailAndPassword(auth, email, password); return view(r.user); },
-    sendReset(email) { return authMod.sendPasswordResetEmail(auth, email); },
-    async sendVerification() { if (auth.currentUser) await authMod.sendEmailVerification(auth.currentUser); },
-    async refreshUser() { if (!auth.currentUser) return null; await auth.currentUser.reload(); await auth.currentUser.getIdToken(true); return view(auth.currentUser); },
+    // Enlace por correo (sin contraseña). El enlace vuelve a esta misma página.
+    sendLink(email) { return authMod.sendSignInLinkToEmail(auth, email, { url: linkUrl(), handleCodeInApp: true }); },
+    isLink() { return authMod.isSignInWithEmailLink(auth, location.href); },
+    async completeLink(email) { const r = await authMod.signInWithEmailLink(auth, email, location.href); return view(r.user); },
     signOut() { return authMod.signOut(auth); },
     async getToken(force = false) { return auth.currentUser ? auth.currentUser.getIdToken(force) : null; },
   };
