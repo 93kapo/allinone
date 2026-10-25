@@ -2,7 +2,8 @@
 import { t } from './i18n.js';
 import { app } from './app.js';
 import { S, set } from './store.js';
-import { prepareImage } from './image.js';
+import { prepareImage, videoPoster } from './image.js';
+import { videoProblem, formatSize } from './lib/video.js';
 import { apiErrorMessage } from './lib/errors.js';
 import { addItem, makeId } from './lib/listops.js';
 
@@ -14,6 +15,21 @@ export function enqueue(files) {
   for (const f of files) { Q.jobs.push({ id: ++seq, file: f, name: f.name || '', status: 'wait', progress: 0, error: '', prepared: null, mainKey: '', thumbKey: '' }); Q.total++; }
   Q.onChange();
   run();
+}
+// Video: se revisa el archivo, se saca el cartel en el navegador y se sube (con progreso real) el video y el cartel.
+export function enqueueVideo(file) {
+  const problem = videoProblem(file);
+  const job = { id: ++seq, kind: 'video', file, name: file.name || '', status: 'wait', progress: 0, error: '', prepared: null, mainKey: '', thumbKey: '', stop: false };
+  if (problem) {
+    job.status = 'error';
+    job.error = problem === 'toobig' ? t('videoBigFile', { size: formatSize(file.size) }) : problem === 'notvideo' ? t('errNotVideo') : t('errDecode');
+    Q.jobs.push(job); Q.onChange();
+    return job;
+  }
+  Q.jobs.push(job); Q.total++;
+  Q.onChange();
+  run();
+  return job;
 }
 export function retry(job) { job.status = 'wait'; job.error = ''; Q.onChange(); run(); }
 export function drop(job) { Q.jobs = Q.jobs.filter((j) => j !== job); Q.total = Math.max(0, Q.total - 1); Q.onChange(); run(); }
@@ -32,7 +48,40 @@ async function run() {
   } finally { Q.running = false; Q.onChange(); }
 }
 
+async function oneVideo(job) {
+  try {
+    job.status = 'prep'; job.stop = false; Q.onChange();
+    if (!job.prepared) job.prepared = await videoPoster(job.file);
+    job.status = 'up'; job.progress = 0; Q.onChange();
+    const pz = job.prepared;
+    if (!job.mainKey) {
+      const r = await app.api.upload(job.file, 'video', (p) => { job.progress = p * 0.97; Q.onChange(); });
+      job.mainKey = r.key;
+    }
+    if (!job.thumbKey) {
+      const r = await app.api.upload(pz.blob, 'poster', (p) => { job.progress = 0.97 + p * 0.03; Q.onChange(); });
+      job.thumbKey = r.key;
+    }
+    app.blobUrls.set(job.thumbKey, URL.createObjectURL(pz.blob));
+    const id = makeId(new Set(S.state.gallery.map((x) => x.id)));
+    set('gallery', addItem(S.state.gallery, {
+      id, type: 'video', category: '', src: job.mainKey, poster: job.thumbKey, w: pz.vw, h: pz.vh,
+      caption: { es: '', en: '' }, alt: { es: '', en: '' }, hidden: false,
+    }, { atStart: true }));
+    Q.jobs = Q.jobs.filter((j) => j !== job);
+    Q.finished++;
+    job.prepared = null;
+    Q.onItem();
+  } catch (e) {
+    job.status = 'error';
+    if (e && e.code) { job.error = t('errPoster'); job.prepared = null; job.stop = false; }
+    else { job.error = apiErrorMessage(e || { network: true }, 'video'); job.stop = true; }
+  }
+  Q.onChange();
+}
+
 async function one(job) {
+  if (job.kind === 'video') return oneVideo(job);
   try {
     job.status = 'prep'; job.stop = false; Q.onChange();
     if (!job.prepared) job.prepared = await prepareImage(job.file, { withThumb: true });

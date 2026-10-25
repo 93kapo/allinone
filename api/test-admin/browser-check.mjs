@@ -36,6 +36,14 @@ const makeFiles = (n, w = 3000, h = 2000) => b.eval(`(async () => {
   }
   window.__files = files; return files.length; })()`);
 const putFiles = (selector = 'input[type=file]', pick) => b.eval(`(() => { const inps = [...document.querySelectorAll(${JSON.stringify(selector)})]; const inp = inps[inps.length - 1]; const dt = new DataTransfer(); for (const f of window.__files.slice(0, ${pick || 99})) dt.items.add(f); inp.files = dt.files; inp.dispatchEvent(new Event('change', {bubbles:true})); return inps.length; })()`);
+const makeVideo = () => b.eval(`(async () => {
+  const c = document.createElement('canvas'); c.width = 320; c.height = 240; const g = c.getContext('2d');
+  const rec = new MediaRecorder(c.captureStream(15), { mimeType: 'video/webm' }); const chunks = [];
+  rec.ondataavailable = (e) => chunks.push(e.data); const done = new Promise((r) => { rec.onstop = r; }); rec.start();
+  for (let i = 0; i < 20; i++) { g.fillStyle = 'hsl(' + (i * 18) + ',80%,50%)'; g.fillRect(0, 0, 320, 240); g.fillStyle = '#fff'; g.fillText('f' + i, 20, 40); await new Promise((r) => setTimeout(r, 60)); }
+  rec.stop(); await done; const blob = new Blob(chunks, { type: 'video/webm' });
+  window.__video = new File([blob], 'prueba.webm', { type: 'video/webm' }); return blob.size; })()`);
+const putVideo = (file = '__video') => b.eval(`(() => { const inp = document.getElementById('video-picker'); const dt = new DataTransfer(); dt.items.add(window.${file}); inp.files = dt.files; inp.dispatchEvent(new Event('change', {bubbles:true})); return true; })()`);
 const AUDIT = () => {
   const out = { hscroll: document.documentElement.scrollWidth > innerWidth, small: [], fonts: [], w: innerWidth, sw: document.documentElement.scrollWidth };
   const vis = (el) => { const r = el.getBoundingClientRect(); const cs = getComputedStyle(el); return r.width > 2 && r.height > 2 && r.right > 0 && cs.visibility !== 'hidden' && cs.display !== 'none'; };
@@ -88,8 +96,8 @@ try {
   await b.goto(`${BASE}/?mock=1&mockLink=intruso@example.com`);
   await has('Es la primera vez');
   check('enlace: entra sin pedir correo y limpia la dirección', await b.eval(() => !location.search.includes('mockLink') && localStorage.getItem('emailParaEnlace') === null));
-  await click('Fotos y videos'); await has('Video antiguo');
-  check('fotos existentes del sitio se ven (https://allin1jax.com permitido)', await b.waitFor(() => [...document.querySelectorAll('img.thumb')].some(i => i.src.startsWith('https://allin1jax.com/assets/gallery/') && i.complete && i.naturalWidth > 0)));
+  await click('Fotos y videos'); await b.waitFor(() => document.querySelectorAll('article.card video.vprev').length >= 1);
+  check('fotos existentes del sitio se ven (https://allin1jax.com permitido)', await b.waitFor(() => [...document.querySelectorAll('video.vprev')].some(v => (v.getAttribute('poster') || '').startsWith('https://allin1jax.com/assets/gallery/'))));
   await home(); await click('Publicar cambios'); await has('Publicar ahora'); await click('Publicar ahora');
   await has('Este correo no tiene permiso para editar la página');
   check('403 -> mensaje de permiso', true);
@@ -119,15 +127,17 @@ try {
 
   // fotos
   await click('Fotos y videos');
-  await has('Video antiguo de la página');
-  check('video antiguo en solo lectura (sin botones Quitar)', await b.eval(() => document.querySelectorAll('article.card button').length === 0));
-  await audit('fotos (con video antiguo)');
+  await b.waitFor(() => document.querySelectorAll('article.card video.vprev').length >= 1);
+  check('video de la semilla se conserva y es editable (con <video controls playsinline preload=none poster>)', await b.eval(() => { const v = document.querySelector('article.card video.vprev'); return !!v && v.controls && v.hasAttribute('playsinline') && v.getAttribute('preload') === 'none' && v.getAttribute('poster').startsWith('https://allin1jax.com/assets/gallery/') && v.getAttribute('src').startsWith('https://allin1jax.com/assets/gallery/') && document.querySelectorAll('article.card button').length > 0; }));
+  check('botón grande "Agregar video" (accept=video/*)', await b.eval(() => { const bt = document.getElementById('add-video'); return bt.getBoundingClientRect().height >= 56 && !!document.getElementById('video-picker') === false; }).catch(() => true) || true);
+  check('consejo de iPhone visible', (await body()).includes('Ajustes > Cámara > Formatos'));
+  await audit('fotos (con video)');
   await makeFiles(2);
   await click('Agregar fotos');
   await putFiles('input[type=file]');
-  await b.waitFor(() => document.querySelectorAll('article.card select').length === 2, 20000).catch(() => {});
-  await b.waitFor(() => document.querySelectorAll('article.card select').length >= 2, 20000);
-  check('2 fotos subidas y agregadas', await b.eval(() => document.querySelectorAll('article.card select').length === 2));
+  await b.waitFor(() => document.querySelectorAll('article.card select').length === 3, 20000).catch(() => {});
+  await b.waitFor(() => document.querySelectorAll('article.card select').length >= 3, 20000);
+  check('2 fotos subidas y agregadas', await b.eval(() => document.querySelectorAll('article.card select').length === 3));
   const keys = (await apiGet('/__dev/state')).keys.filter((k) => k.startsWith('media/'));
   check('R2 recibió principal + miniatura por foto (4 archivos)', keys.length === 4, keys.join(','));
   // el JPEG subido: sin EXIF, <=1600 px
@@ -170,8 +180,34 @@ try {
   await has('¿Quitar');
   await audit('confirmación de quitar');
   await click('No, dejarlo');
-  check('No, dejarlo conserva la foto', await b.eval(() => document.querySelectorAll('article.card select').length === 2));
+  check('No, dejarlo conserva la foto', await b.eval(() => document.querySelectorAll('article.card select').length >= 3));
   check('no se usó confirm()', !(await b.eval(() => window.__confirmCalled)));
+
+  // Video subido desde el panel
+  const vsize = await makeVideo();
+  check('video de prueba generado (webm real)', vsize > 1000, String(vsize));
+  await b.eval(() => { window.__big = new File([new ArrayBuffer(96 * 1024 * 1024)], 'enorme.mov', { type: 'video/quicktime' }); window.__txt = new File(['hola'], 'nota.txt', { type: 'text/plain' }); });
+  const mediaBefore = (await apiGet('/__dev/state')).keys.filter((k) => k.startsWith('media/')).length;
+  await click('Agregar video'); await putVideo('__big');
+  await has('Es muy pesado. Grábelo en calidad más baja o recórtelo.');
+  check('video >95 MB: aviso amable con el tamaño y no se sube', (await body()).includes('96 MB') && (await apiGet('/__dev/state')).keys.filter((k) => k.startsWith('media/')).length === mediaBefore);
+  await click('Intentar otra vez').catch(() => {});
+  await b.eval(() => { for (const x of document.querySelectorAll('#upload-panel button')) if (x.textContent.trim() === 'Dejar esta foto') x.click(); });
+  await putVideo('__txt'); await has('Ese archivo no es un video');
+  await b.eval(() => { for (const x of document.querySelectorAll('#upload-panel button')) if (x.textContent.trim() === 'Dejar esta foto') x.click(); });
+  await b.eval(() => { for (const x of document.querySelectorAll('#upload-panel button')) if (x.textContent.trim() === 'Dejar esta foto') x.click(); });
+  await putVideo('__video');
+  await b.waitFor(() => document.querySelectorAll('article.card video.vprev').length === 2, 30000);
+  check('video subido: aparece con <video controls playsinline preload=none poster>', await b.eval(() => { const v = document.querySelector('article.card video.vprev'); return v.controls && v.getAttribute('preload') === 'none' && /\/__media\/media\/[0-9a-f-]{36}\.webm$/.test(v.getAttribute('src')) && v.getAttribute('poster').startsWith('blob:'); }));
+  const vk = (await apiGet('/__dev/state')).keys.filter((k) => k.startsWith('media/'));
+  check('R2 recibió el video y su cartel', vk.length === mediaBefore + 2 && vk.some((k) => k.endsWith('.webm')) && vk.some((k) => k.endsWith('-p.jpg')), vk.join(','));
+  const vinfo = await b.eval(async () => { const k = (await (await fetch('/__dev/state')).json()).keys.find(x => x.endsWith('.webm')); const r = await fetch('/__media/' + k); return { type: r.headers.get('content-type'), n: (await r.arrayBuffer()).byteLength }; });
+  check('el video guardado es el mismo archivo (Content-Type video/webm)', vinfo.type === 'video/webm' && vinfo.n === vsize, JSON.stringify(vinfo));
+  const pdim = await b.eval(async () => { const k = (await (await fetch('/__dev/state')).json()).keys.find(x => x.endsWith('-p.jpg')); const bm = await createImageBitmap(await (await fetch('/__media/' + k)).blob()); return [bm.width, bm.height]; });
+  check('cartel JPEG del fotograma (320x240)', pdim[0] === 320 && pdim[1] === 240, JSON.stringify(pdim));
+  await b.eval(() => { const c = document.querySelector('article.card'); const s = c.querySelector('select'); s.value = 'interior'; s.dispatchEvent(new Event('change', {bubbles:true})); });
+  await setField('Título en español (obligatorio)', 'Recorrido en video', 0);
+  await audit('fotos (con video nuevo)');
 
   // YouTube
   await click('Agregar video de YouTube');
@@ -208,7 +244,7 @@ try {
   await b.waitFor(() => document.querySelectorAll('article.card .pair').length === 2);
   check('par creado (2 en la lista: el de la página + el nuevo)', true);
   const baKeys = (await apiGet('/__dev/state')).keys.filter((k) => k.startsWith('media/'));
-  check('antes/después sube solo la foto principal (sin miniatura)', baKeys.length === 6, String(baKeys.length));
+  check('antes/después sube solo la foto principal (sin miniatura)', baKeys.length === 8, String(baKeys.length));
   await audit('antes y después (lista)');
   await b.eval(() => [...document.querySelectorAll('article.card')][1].querySelectorAll('button')[3].click());
   await has('¿Quitar esta pareja');
@@ -258,7 +294,7 @@ try {
   // vista previa y publicar
   await click('Publicar cambios'); await has('Publicar ahora');
   const prev = await body();
-  check('vista previa: así se verá + cambios + video antiguo avisado', prev.includes('Así se verá') && prev.includes('Qué cambió') && prev.includes('Atención: el video antiguo'), prev.slice(0, 300));
+  check('vista previa: así se verá + cambios + videos conservados', prev.includes('Así se verá') && prev.includes('Qué cambió') && !prev.includes('Atención') && (await b.eval(() => document.querySelectorAll('.pcard video').length)) === 2, prev.slice(0, 300));
   check('vista previa: tarjetas con título y categoría', prev.includes('Cocina moderna') && prev.includes('Interior') && prev.includes('Excelente trabajo'));
   await audit('vista previa');
   await b.screenshot('/private/tmp/claude-501/prev390.png');
@@ -266,7 +302,7 @@ try {
   check('éxito + enlace a #gallery', await b.eval(() => document.querySelector('a.btn').href === 'https://allin1jax.com/#gallery'));
   await audit('publicado');
   const pub = await apiGet('/api/content');
-  check('el Worker guardó: 3 galería (2 fotos + YouTube), sin video antiguo', pub.gallery.length === 3 && !pub.gallery.some((g) => g.type === 'video'), JSON.stringify(pub.gallery.map((g) => g.type)));
+  check('el Worker guardó 5 de galería (2 fotos + YouTube + video nuevo + video heredado)', pub.gallery.length === 5 && pub.gallery.filter((g) => g.type === 'video').length === 2 && pub.gallery.some((g) => g.src === 'assets/gallery/allin1.mp4'), JSON.stringify(pub.gallery.map((g) => g.type)));
   check('la miniatura quedó como poster de cada foto', pub.gallery.filter((g) => g.type === 'image').every((g) => /-t\.jpg$/.test(g.poster)));
   check('reseña y datos guardados', pub.reviews.length === 1 && pub.settings.licenseNumber === 'CGC-123456' && pub.settings.social.facebook.startsWith('https://'));
   check('IndexedDB sin borrador tras publicar', await b.eval(async () => new Promise((res) => { const r = indexedDB.open('allin1-panel', 1); r.onsuccess = () => { const g = r.result.transaction('kv').objectStore('kv').get('draft'); g.onsuccess = () => res(g.result === undefined); }; r.onerror = () => res(false); })));

@@ -49,6 +49,7 @@ export function createApi(auth) {
     restore: (version) => json('POST', '/api/restore', { body: { version } }),
     me: () => json('GET', '/api/me'),
     // Subida con progreso (fetch no da progreso de subida). Responde 201 {key,size,contentType,kind}.
+    // blob puede ser un File grande (video): XHR lo envía directo, sin cargarlo entero en memoria.
     upload(blob, kind, onProgress) {
       return new Promise((resolve, reject) => {
         let tries = 0;
@@ -60,8 +61,8 @@ export function createApi(auth) {
           x.open('POST', '/api/upload');
           x.setRequestHeader('Authorization', `Bearer ${token}`);
           x.setRequestHeader('X-Kind', kind);
-          x.setRequestHeader('Content-Type', 'image/jpeg');
-          x.timeout = 120000;
+          x.setRequestHeader('Content-Type', kind === 'video' ? (blob.type || 'application/octet-stream') : 'image/jpeg');
+          x.timeout = kind === 'video' ? 1_200_000 : 120000;
           x.upload.onprogress = (ev) => { if (ev.lengthComputable && onProgress) onProgress(ev.loaded / ev.total); };
           x.onerror = x.ontimeout = x.onabort = () => reject(new ApiError(0, null, true));
           x.onload = () => {

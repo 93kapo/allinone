@@ -1,6 +1,7 @@
 // Prepara una foto en el teléfono: corrige la orientación, la achica y la guarda como JPEG nuevo
 // (al redibujarla se pierden los datos EXIF/GPS).
 import { PHOTO_MAX, THUMB_MAX, JPEG_QUALITY, fitWithin } from './lib/imagesize.js';
+import { POSTER_MAX } from './lib/video.js';
 
 class PhotoError extends Error { constructor(code) { super(code); this.code = code; } }
 
@@ -49,5 +50,33 @@ export async function prepareImage(file, { withThumb = true } = {}) {
     if (withThumb) { const s = fitWithin(d.w, d.h, THUMB_MAX); thumb = { blob: await toJpeg(d.src, s.w, s.h) }; }
     return { main, thumb };
   } finally { d.done(); }
+}
+
+// Cartel (poster) de un video: un fotograma como JPEG de 1280 px. El video se lee directo del archivo (no se carga entero).
+// -> { blob, w, h, vw, vh } con vw/vh = medidas del video (para el item). Lanza PhotoError('poster') si el navegador no puede.
+export async function videoPoster(file) {
+  const url = URL.createObjectURL(file);
+  const v = document.createElement('video');
+  v.muted = true; v.playsInline = true; v.preload = 'metadata'; v.setAttribute('playsinline', ''); v.setAttribute('muted', '');
+  const once = (ev, ms) => new Promise((res, rej) => {
+    const to = setTimeout(() => { cleanup(); rej(new PhotoError('poster')); }, ms);
+    const ok = () => { cleanup(); res(); };
+    const bad = () => { cleanup(); rej(new PhotoError('poster')); };
+    const cleanup = () => { clearTimeout(to); v.removeEventListener(ev, ok); v.removeEventListener('error', bad); };
+    v.addEventListener(ev, ok); v.addEventListener('error', bad);
+  });
+  try {
+    v.src = url;
+    await once('loadeddata', 20000);
+    if (!(v.videoWidth >= 1 && v.videoHeight >= 1)) throw new PhotoError('poster');
+    const at = Number.isFinite(v.duration) && v.duration > 0 ? Math.min(1, v.duration / 2) : 0;
+    if (at > 0) { const seeked = once('seeked', 20000); v.currentTime = at; await seeked; }
+    const m = fitWithin(v.videoWidth, v.videoHeight, POSTER_MAX);
+    const blob = await toJpeg(v, m.w, m.h);
+    const full = fitWithin(v.videoWidth, v.videoHeight, 4000);
+    return { blob, w: m.w, h: m.h, vw: full.w, vh: full.h };
+  } catch (e) {
+    throw e instanceof PhotoError ? e : new PhotoError('poster');
+  } finally { v.removeAttribute('src'); try { v.load(); } catch { /* nada */ } URL.revokeObjectURL(url); }
 }
 export { PhotoError };

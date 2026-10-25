@@ -128,6 +128,17 @@ export function thumbEl(url, alt = '') {
   return img;
 }
 
+// Vista previa de un video con controles (no descarga nada hasta que se toque: preload none).
+export function videoEl(it) {
+  const src = imgUrl(it.src);
+  if (!src) return thumbEl(null);
+  const v = h('video', { class: 'vprev', controls: true, playsinline: '', preload: 'none', 'aria-label': it.caption.es || t('videoItem') });
+  const poster = imgUrl(it.poster);
+  if (poster) v.setAttribute('poster', poster);
+  v.setAttribute('src', src);
+  return v;
+}
+
 // ---- Controles comunes de una tarjeta (Subir/Bajar/Ocultar/Quitar con confirmación en la página) ----
 export function mutate(section, list) { set(section, list); render(); }
 

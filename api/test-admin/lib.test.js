@@ -9,6 +9,7 @@ import { mediaUrl } from '../admin/js/lib/media-url.js';
 import { apiErrorMessage } from '../admin/js/lib/errors.js';
 import { diffLists, describeDiff, hasChange } from '../admin/js/lib/changes.js';
 import { t } from '../admin/js/i18n.js';
+import { MAX_VIDEO_BYTES, formatSize, videoProblem } from '../admin/js/lib/video.js';
 
 const ID = 'dQw4w9WgXcQ';
 
@@ -180,4 +181,39 @@ test('cambios entre listas', () => {
 test('textos: reemplazo de variables', () => {
   assert.equal(t('uploading', { i: 2, n: 5 }), 'Subiendo foto 2 de 5…');
   assert.equal(t('noExiste'), 'noExiste');
+});
+
+test('video: tamaño legible y límite de 95 MB (igual que el Worker)', () => {
+  assert.equal(MAX_VIDEO_BYTES, 95 * 1024 * 1024);
+  assert.match(readFileSync(new URL('../src/media.js', import.meta.url), 'utf8'), /video: 95 \* 1024 \* 1024/);
+  assert.equal(formatSize(500), '1 KB');
+  assert.equal(formatSize(300 * 1024), '300 KB');
+  assert.equal(formatSize(42.5 * 1024 * 1024), '42.5 MB');
+  assert.equal(formatSize(120 * 1024 * 1024), '120 MB');
+  assert.equal(formatSize(NaN), '');
+  const f = (size, type = 'video/mp4', name = 'a.mp4') => ({ size, type, name });
+  assert.equal(videoProblem(f(1000)), null);
+  assert.equal(videoProblem(f(MAX_VIDEO_BYTES)), null);
+  assert.equal(videoProblem(f(MAX_VIDEO_BYTES + 1)), 'toobig');
+  assert.equal(videoProblem(f(0)), 'empty');
+  assert.equal(videoProblem(null), 'empty');
+  assert.equal(videoProblem(f(10, 'image/jpeg', 'a.jpg')), 'notvideo');
+  assert.equal(videoProblem(f(10, '', 'a.MOV')), null);
+  assert.equal(videoProblem(f(10, '', 'a.txt')), 'notvideo');
+  assert.equal(videoProblem(f(10, 'video/quicktime', 'IMG_1.MOV')), null);
+});
+
+test('errores de video a español', () => {
+  const m = (status, body) => apiErrorMessage({ status, body }, 'video');
+  assert.equal(m(413), 'Es muy pesado. Grábelo en calidad más baja o recórtelo.');
+  assert.match(m(415), /MP4 o MOV/);
+  assert.match(m(429, { error: 'Llegaste al límite de 5 videos por hoy. Intenta mañana.' }), /límite de videos/);
+  assert.match(m(429, { error: 'Demasiadas subidas seguidas.' }), /Espere un minuto/);
+  assert.match(m(507), /lleno/);
+  assert.equal(apiErrorMessage({ network: true }, 'video'), 'No pudimos subir el video. Revise su internet e intente otra vez.');
+});
+
+test('CSP del panel: media-src con los dominios de video (y blob: para la vista previa local)', () => {
+  const hdr = readFileSync(new URL('../admin/_headers', import.meta.url), 'utf8');
+  assert.match(hdr, /media-src 'self' https:\/\/media\.allin1jax\.com https:\/\/allin1jax\.com https:\/\/www\.allin1jax\.com blob:;/);
 });

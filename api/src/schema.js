@@ -22,7 +22,11 @@ const REVIEW_KEYS = ['id', 'name', 'text', 'source', 'date', 'hidden'];
 const CATEGORIES = ['interior', 'exterior', 'remodeling'];
 const SOURCES = ['google', 'facebook', 'nextdoor', 'directo'];
 
-const MEDIA_RE = /^media\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(-t)?\.(jpg|png|webp)$/;
+const UUID_RE = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+const MEDIA_RE = new RegExp(`^media/${UUID_RE}(-t|-p)?\\.(jpg|png|webp)$`); // fotos, miniaturas (-t) y carteles (-p)
+const VIDEO_RE = new RegExp(`^media/${UUID_RE}\\.(mp4|mov|webm)$`);
+// Único video "heredado" del sitio que sigue permitido por ruta (lista blanca exacta).
+export const LEGACY_VIDEOS = new Set(['assets/gallery/allin1.mp4']);
 const ASSET_RE = /^assets\/gallery\/[A-Za-z0-9][A-Za-z0-9_-]{0,79}(\.[A-Za-z0-9_-]{1,10}){0,2}$/;
 const ASSET_EXT_RE = /\.(jpg|jpeg|png|webp)$/i;
 const ID_RE = /^[A-Za-z0-9_-]{1,40}$/;
@@ -45,6 +49,12 @@ export function cleanText(s) {
     .replace(/[\u0000-\u001F\u007F-\u009F‪-‮⁦-⁩‎‏]/g, '')
     .replace(/ {2,}/g, ' ')
     .trim();
+}
+
+export function videoOk(ref, mediaKeys) {
+  if (typeof ref !== 'string') return false;
+  if (LEGACY_VIDEOS.has(ref)) return true;
+  return VIDEO_RE.test(ref) && mediaKeys.has(ref);
 }
 
 export function mediaOk(ref, mediaKeys) {
@@ -124,6 +134,11 @@ export function validateContent(input, opts = {}) {
     if (!mediaOk(v, mediaKeys)) { err(path, `${label} no es válida o no se subió al sitio.`); return ''; }
     return v;
   };
+  const video = (v, path) => {
+    if (v === undefined || v === null || v === '') { err(path, 'El video es obligatorio.'); return ''; }
+    if (!videoOk(v, mediaKeys)) { err(path, 'El video no es válido o no se subió al sitio.'); return ''; }
+    return v;
+  };
   const pair = (o, k, path, maxEs, maxEn, needEs) => {
     const p = sub(o, k, path);
     checkKeys(p, ['es', 'en'], path);
@@ -192,13 +207,16 @@ export function validateContent(input, opts = {}) {
         checkKeys(item, GALLERY_KEYS, p);
         const id = idOf(item, p, seen);
         const type = get(item, 'type');
-        if (type !== 'image' && type !== 'youtube') err(`${p}.type`, 'El tipo debe ser foto o video de YouTube.');
+        if (type !== 'image' && type !== 'youtube' && type !== 'video') err(`${p}.type`, 'El tipo debe ser foto, video o video de YouTube.');
         const category = get(item, 'category');
         if (!CATEGORIES.includes(category)) err(`${p}.category`, 'La categoría no es válida.');
         const out = { id, type, category };
         if (type === 'image') {
           out.src = media(get(item, 'src'), `${p}.src`, 'La foto');
           if (hasOwn(item, 'youtubeId')) err(`${p}.youtubeId`, 'Una foto no lleva código de YouTube.');
+        } else if (type === 'video') {
+          out.src = video(get(item, 'src'), `${p}.src`);
+          if (hasOwn(item, 'youtubeId')) err(`${p}.youtubeId`, 'Un video subido no lleva código de YouTube.');
         } else if (type === 'youtube') {
           const yt = get(item, 'youtubeId');
           if (typeof yt !== 'string' || !/^[A-Za-z0-9_-]{11}$/.test(yt)) err(`${p}.youtubeId`, 'El código de YouTube no es válido.');
@@ -206,10 +224,11 @@ export function validateContent(input, opts = {}) {
           if (hasOwn(item, 'src')) err(`${p}.src`, 'Un video de YouTube no lleva foto en este campo.');
         }
         const poster = get(item, 'poster');
-        if (poster !== undefined && poster !== null && poster !== '') out.poster = media(poster, `${p}.poster`, 'La imagen de portada');
+        if (type === 'video') out.poster = media(poster, `${p}.poster`, 'La imagen de portada');
+        else if (poster !== undefined && poster !== null && poster !== '') out.poster = media(poster, `${p}.poster`, 'La imagen de portada');
         for (const d of ['w', 'h']) {
           const v = get(item, d);
-          if (v === undefined && type === 'youtube') { out[d] = d === 'w' ? 1280 : 720; continue; }
+          if (v === undefined && type !== 'image') { out[d] = d === 'w' ? 1280 : 720; continue; }
           if (!Number.isInteger(v) || v < 1 || v > 4000) { err(`${p}.${d}`, 'La medida debe ser un número entero entre 1 y 4000.'); out[d] = 0; } else out[d] = v;
         }
         const caption = pair(item, 'caption', `${p}.caption`, 80, 80, true);

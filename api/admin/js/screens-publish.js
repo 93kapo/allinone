@@ -1,7 +1,7 @@
 // Inicio, vista previa, publicar, historial, deshacer, borrador pendiente y errores de carga.
 import { h } from './dom.js';
 import { t } from './i18n.js';
-import { app, register, go, render, backButton, msg, thumbEl, imgUrl, announce } from './app.js';
+import { app, register, go, render, backButton, msg, thumbEl, imgUrl, announce, videoEl } from './app.js';
 import { S, setBase, useDraft, isDirty, clearDraft, saveNow, rebaseDraft, normalize } from './store.js';
 import { validateState, locateServerErrors } from './lib/validate.js';
 import { apiErrorMessage } from './lib/errors.js';
@@ -47,7 +47,7 @@ register('draft', (p) => {
 function changesFor() {
   const next = S.state, base = S.base;
   return {
-    gallery: diffLists(base.gallery, next.gallery.filter((x) => x.type !== 'video')),
+    gallery: diffLists(base.gallery, next.gallery),
     beforeAfter: diffLists(base.beforeAfter, next.beforeAfter),
     reviews: diffLists(base.reviews, next.reviews),
     settings: JSON.stringify(base.settings) !== JSON.stringify(next.settings),
@@ -59,12 +59,12 @@ function previewBody() {
   const root = h('div');
   const vis = (l) => l.filter((x) => !x.hidden);
   const hid = (l) => l.length - vis(l).length;
-  const g = vis(st.gallery.filter((x) => x.type !== 'video'));
+  const g = vis(st.gallery);
   root.append(h('h2', null, t('prevGallery')));
   root.append(g.length ? h('div', { class: 'pgrid' }, g.map((it) => h('div', { class: 'pcard' },
-    thumbEl(it.type === 'youtube' ? youtubeThumb(it.youtubeId) : imgUrl(it.poster || it.src)),
-    h('p', null, h('strong', null, it.caption.es || t('noTitle'))), h('p', null, `${cat[it.category] || ''}${it.type === 'youtube' ? ` · ${t('youtubeVideo')}` : ''}`)))) : h('p', null, t('empty')));
-  if (hid(st.gallery.filter((x) => x.type !== 'video'))) root.append(h('p', { class: 'help' }, t('prevHiddenNote', { n: hid(st.gallery.filter((x) => x.type !== 'video')) })));
+    it.type === 'video' ? videoEl(it) : thumbEl(it.type === 'youtube' ? youtubeThumb(it.youtubeId) : imgUrl(it.poster || it.src)),
+    h('p', null, h('strong', null, it.caption.es || t('noTitle'))), h('p', null, `${cat[it.category] || ''}${it.type === 'youtube' ? ` · ${t('youtubeVideo')}` : it.type === 'video' ? ` · ${t('videoItem')}` : ''}`)))) : h('p', null, t('empty')));
+  if (hid(st.gallery)) root.append(h('p', { class: 'help' }, t('prevHiddenNote', { n: hid(st.gallery) })));
   root.append(h('h2', null, t('prevBA')));
   const b = vis(st.beforeAfter);
   root.append(b.length ? h('div', null, b.map((it) => h('div', { class: 'card' },
@@ -101,9 +101,8 @@ register('preview', (p) => {
   const any = lines.length > 0 || S.isFirst;
   root.append(h('h2', null, t('prevChanges')));
   root.append(lines.length ? h('ul', null, lines.map((l) => h('li', null, l))) : h('p', null, t('prevNoChanges')));
-  for (const d of v.dropped) root.append(msg('warn', t('legacyDropWarn', { name: d.caption.es || d.caption.en || t('noTitle') })));
   root.append(previewBody());
-  const go1 = h('button', { class: 'btn btn-primary btn-big', type: 'button', disabled: !any && !v.dropped.length, onclick: async () => { go1.disabled = true; go1.textContent = t('publishing'); await publish(); } }, t('publishNow'));
+  const go1 = h('button', { class: 'btn btn-primary btn-big', type: 'button', disabled: !any, onclick: async () => { go1.disabled = true; go1.textContent = t('publishing'); await publish(); } }, t('publishNow'));
   const row = h('div', { class: 'stack' }, go1);
   if (p.conflict) row.prepend(h('button', { class: 'btn btn-secondary btn-big', type: 'button', onclick: () => app.reload() }, t('reload')));
   row.append(h('button', { class: 'btn btn-secondary btn-big', type: 'button', onclick: () => go('home') }, t('keepEditing')));

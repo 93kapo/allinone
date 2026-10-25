@@ -343,7 +343,7 @@
         m.setAttribute('allow', 'encrypted-media; picture-in-picture; fullscreen'); m.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
         if (frameHook) frameHook(m);
       }
-      else if (it.type === 'video') { m = mk('video'); m.controls = true; m.playsInline = true; m.preload = 'metadata'; if (it.poster) m.poster = it.poster; m.src = it.src; m.setAttribute('aria-label', pickL(it.alt) || gTitle(it)); }
+      else if (it.type === 'video') { m = mk('video'); m.controls = true; m.playsInline = true; m.preload = 'none'; if (it.poster) m.poster = it.poster; m.src = it.src; m.setAttribute('aria-label', pickL(it.alt) || gTitle(it)); }
       else { m = mk('img'); m.src = it.src; m.alt = pickL(it.alt); }
       lbMedia.appendChild(m);
       lbCap.textContent = it.ph ? (gTitle(it) + (catLabel(it.category) ? ' · ' + catLabel(it.category) : '')) : (gTitle(it) || '');

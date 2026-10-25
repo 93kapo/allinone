@@ -3,7 +3,13 @@ import { t } from '../i18n.js';
 
 // ctx: 'publish' | 'restore' | 'upload' | 'load' | 'other'
 export function apiErrorMessage({ status = 0, body = null, network = false } = {}, ctx = 'other') {
-  if (network || !status) return ctx === 'upload' ? t('errUploadPhoto') : t('errNetwork');
+  if (network || !status) return ctx === 'upload' ? t('errUploadPhoto') : ctx === 'video' ? t('errUploadVideo') : t('errNetwork');
+  if (ctx === 'video') {
+    if (status === 413) return t('videoBig');
+    if (status === 415) return t('err415Video');
+    if (status === 411) return t('errUploadVideo');
+    if (status === 429 && /llegaste al l[ií]mite/i.test(body && typeof body.error === 'string' ? body.error : '')) return t('err429Video');
+  }
   const text = body && typeof body.error === 'string' ? body.error : '';
   switch (status) {
     case 401: return t('err401');

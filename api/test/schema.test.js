@@ -105,7 +105,7 @@ test('tipos erróneos', () => {
   c = validContent(); c.gallery[0].h = 1.5; bad(c, 'gallery[0].h');
   c = validContent(); c.gallery[0].hidden = 'si'; bad(c, 'gallery[0].hidden');
   c = validContent(); c.gallery[0].category = 'jardin'; bad(c, 'gallery[0].category');
-  c = validContent(); c.gallery[0].type = 'video'; bad(c, 'gallery[0].type');
+  c = validContent(); c.gallery[0].type = 'video'; bad(c, 'gallery[0].src');
   c = validContent(); c.gallery[0].caption.es = 5; bad(c, 'gallery[0].caption.es');
   c = validContent(); c.gallery = [5]; bad(c, 'gallery[0]');
   c = validContent(); c.settings.showLicensed = 'yes'; bad(c, 'settings.showLicensed');

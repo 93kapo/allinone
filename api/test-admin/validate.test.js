@@ -2,6 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildPayload, validateState, locateError } from '../admin/js/lib/validate.js';
 import { validateContent } from '../src/schema.js';
+import { normalize } from '../admin/js/store.js';
+import { readFileSync } from 'node:fs';
 
 const NOW = new Date('2026-10-24T12:00:00Z');
 const UUID = '0b8b5f2e-1c3d-4e5f-8a9b-0c1d2e3f4a5b';
@@ -16,9 +18,9 @@ const errs = (s) => validateState(s, NOW).errores;
 
 test('estado válido pasa', () => { assert.deepEqual(errs(base()), []); });
 
-test('el payload nunca lleva campos internos ni video antiguo', () => {
+test('el payload nunca lleva campos internos ni tipos desconocidos', () => {
   const s = base();
-  s.gallery.push({ id: 'v1', type: 'video', category: 'exterior', src: 'assets/gallery/a.mp4', caption: { es: 'Viejo' } });
+  s.gallery.push({ id: 'v1', type: 'gif', category: 'exterior', src: 'assets/gallery/a.gif', caption: { es: 'Viejo' } });
   s.gallery[0]._borrar = 1;
   const { payload, dropped, map } = buildPayload(s);
   assert.equal(payload.gallery.length, 1);
@@ -107,4 +109,22 @@ test('locateError', () => {
   assert.deepEqual(locateError('reviews[0]', map), { section: 'reviews', index: 0, id: 'r', field: '' });
   assert.equal(locateError('settings.social.tiktok', map).field, 'social.tiktok');
   assert.equal(locateError('', map).section, '');
+});
+
+test('videos: el item video se envía con src y cartel; el heredado de la semilla pasa', () => {
+  const UUIDV = '0b8b5f2e-1c3d-4e5f-8a9b-0c1d2e3f4a5c';
+  const s = base();
+  s.gallery.push({ id: 'v1', type: 'video', category: 'interior', src: `media/${UUIDV}.mp4`, poster: `media/${UUIDV}-p.jpg`, w: 720, h: 1280, caption: { es: 'Recorrido', en: '' }, alt: { es: '', en: '' }, hidden: false });
+  const { payload, dropped } = buildPayload(s);
+  assert.equal(dropped.length, 0);
+  assert.equal(payload.gallery[1].type, 'video');
+  assert.equal(payload.gallery[1].src, `media/${UUIDV}.mp4`);
+  assert.equal('youtubeId' in payload.gallery[1], false);
+  assert.deepEqual(errs(s), []);
+  s.gallery[1].poster = '';
+  assert.equal(errs(s)[0].campo, 'gallery[1].poster');
+  const seed = JSON.parse(readFileSync(new URL('../../web/assets/content-seed.json', import.meta.url), 'utf8'));
+  const st = normalize(seed);
+  assert.deepEqual(validateState(st, NOW).errores.map((e) => e.campo), ['gallery[0].caption.es'].filter(() => false));
+  assert.equal(buildPayload(st).payload.gallery[0].src, 'assets/gallery/allin1.mp4');
 });

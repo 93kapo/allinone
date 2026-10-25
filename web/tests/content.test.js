@@ -194,3 +194,27 @@ test('toBeforeAfter and toReviews', function () {
   assert.equal(es[1].dateLabel, '');
   assert.equal(C.formatReviewDate('2026-00', 'en'), '');
 });
+
+test('uploaded videos (media/<uuid>.mp4 + poster) resolve against the media origin; unsafe sources are dropped', function () {
+  var U = '123e4567-e89b-42d3-a456-426614174000';
+  var c = C.validateContent(base({ gallery: [
+    { id: 'v1', type: 'video', category: 'interior', src: 'media/' + U + '.mp4', poster: 'media/' + U + '-p.jpg', w: 720, h: 1280, caption: { es: 'Recorrido', en: 'Tour' } },
+    { id: 'v2', type: 'video', category: 'interior', src: 'assets/gallery/allin1.mp4', poster: 'assets/gallery/allin1-poster.jpg' },
+    { id: 'v3', type: 'video', category: 'interior', src: 'https://evil.com/a.mp4', poster: 'media/' + U + '-p.jpg' },
+    { id: 'v4', type: 'video', category: 'interior', src: 'media/' + U + '.mov', poster: 'https://evil.com/p.jpg' }
+  ] }));
+  var items = C.toGalleryItems(c, { base: '../', mediaOrigin: MEDIA });
+  same(items.map(function (i) { return i.id; }), ['v1', 'v2', 'v4']);
+  assert.equal(items[0].type, 'video');
+  assert.equal(items[0].src, MEDIA + '/media/' + U + '.mp4');
+  assert.equal(items[0].poster, MEDIA + '/media/' + U + '-p.jpg');
+  assert.equal(items[1].src, '../assets/gallery/allin1.mp4');
+  assert.equal(items[2].poster, '', 'unsafe poster dropped');
+});
+
+test('site renders video items with poster, controls, playsinline and preload none', function () {
+  var src = fs.readFileSync(path.join(__dirname, '..', 'assets', 'js', 'main.js'), 'utf8');
+  var line = src.split('\n').filter(function (l) { return l.indexOf("it.type === 'video') { m = mk('video'); m.controls") >= 0; })[0];
+  assert.ok(line, 'lightbox video branch exists');
+  assert.ok(/m\.controls = true/.test(line) && /m\.playsInline = true/.test(line) && /m\.preload = 'none'/.test(line) && /m\.poster = it\.poster/.test(line));
+});

@@ -10,9 +10,9 @@ export function buildPayload(state) {
   const gallery = [], beforeAfter = [], reviews = [], dropped = [];
   const map = { gallery: [], beforeAfter: [], reviews: [] };
   for (const it of state.gallery) {
-    if (it.type !== 'image' && it.type !== 'youtube') { dropped.push(it); continue; } // video antiguo: el Worker no lo acepta
+    if (it.type !== 'image' && it.type !== 'youtube' && it.type !== 'video') { dropped.push(it); continue; } // tipo desconocido
     const o = { id: it.id, type: it.type, category: it.category, caption: pair(it.caption), hidden: !!it.hidden };
-    if (it.type === 'image') o.src = it.src; else o.youtubeId = it.youtubeId;
+    if (it.type === 'image' || it.type === 'video') o.src = it.src; else o.youtubeId = it.youtubeId;
     if (it.poster) o.poster = it.poster;
     if (it.w !== undefined) o.w = it.w;
     if (it.h !== undefined) o.h = it.h;

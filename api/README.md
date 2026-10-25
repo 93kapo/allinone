@@ -32,14 +32,14 @@ Todo lo guardado vive en R2: `content/current.json`, `content/v-<version>.json`,
 | `PUT /api/content` | sí | Guarda una versión nueva. Cabecera `If-Match: <version actual>` (o `none` si no existe). `409` "Alguien cambió el sitio hace un momento, recarga" si no coincide; `428` si falta; `422` con `errores:[{campo,mensaje}]`. El servidor fija `schemaVersion`, `version`, `updatedAt`, `updatedBy` y genera ids faltantes. |
 | `GET /api/history` | sí | Hasta 50 versiones, más recientes primero: `version`, `updatedAt`, `updatedBy`, `resumen` (añadidos/quitados/modificados por sección), `actual`, `restauradaDe`. |
 | `POST /api/restore` `{"version":"..."}` | sí | Crea una NUEVA versión copiando esa. Para deshacer, se restaura la versión anterior. |
-| `POST /api/upload` | sí | Cuerpo binario crudo + `X-Kind: photo` (máx 8 MB) o `thumb` (máx 1 MB). Solo JPEG/PNG/WebP, detectado por la firma del archivo (el `Content-Type` del cliente se ignora). Devuelve `{key,size,contentType,kind}`. |
+| `POST /api/upload` | sí | Cuerpo binario crudo + `X-Kind`: `photo` (máx 8 MB), `thumb` (1 MB), `poster` (cartel de un video, 2 MB; clave `-p`) o `video` (máx **95 MB**, MP4/MOV por la caja `ftyp`, o WebM). Imágenes: JPEG/PNG/WebP por firma. El `Content-Type` del cliente se ignora. El video exige `Content-Length` (411 si falta), se sube en streaming a R2 sin juntarlo en memoria y se corta si el cuerpo real pasa de lo declarado. Devuelve `{key,size,contentType,kind}`. |
 | `GET /api/me` | sí | Correo y cuotas restantes del día. |
 
 No existe endpoint para borrar medios. La limpieza de huérfanos (nunca usados, más de 30 días) es la función pura `findOrphans` de `src/media.js`, solo para v2; lo marcado `used:true` nunca se considera huérfano (protege lo que está en el historial).
 
 Esquema del contenido: raíz `{schemaVersion:1, version, updatedAt, updatedBy, settings, gallery, beforeAfter, reviews}`; límites: 256 KB, 300 elementos en galería, 30 en antes/después, 30 reseñas. Fotos: clave `media/<uuid>.<ext>` que exista en el manifiesto, o ruta `assets/gallery/<nombre>.(jpg|jpeg|png|webp)` del sitio. No hay teléfono ni WhatsApp editables en v1. Los errores salen en español, por campo (por ejemplo `gallery[2].caption.es`).
 
-Variables (todas opcionales salvo las dos primeras): `FIREBASE_PROJECT_ID` (en `wrangler.jsonc`), `ALLOWED_EMAILS` (**secret**), `MAX_BUCKET_MB` (4000), `QUOTA_FILES_PER_DAY` (40), `QUOTA_MB_PER_DAY` (80), `ADMIN_DISABLED` (`"1"` = interruptor de emergencia: todo lo autenticado responde 503).
+Variables (todas opcionales salvo las dos primeras): `FIREBASE_PROJECT_ID` (en `wrangler.jsonc`), `ALLOWED_EMAILS` (**secret**), `MAX_BUCKET_MB` (**8000**: tope global de `media/`, para no pasar de los 10 GB gratis de R2), `QUOTA_VIDEOS_PER_DAY` (5), `QUOTA_VIDEO_MB_PER_DAY` (500; los videos tienen cuota aparte de las fotos), `QUOTA_FILES_PER_DAY` (40), `QUOTA_MB_PER_DAY` (80), `ADMIN_DISABLED` (`"1"` = interruptor de emergencia: todo lo autenticado responde 503).
 
 ## Cómo correr las pruebas
 
@@ -63,6 +63,10 @@ node test-admin/browser-check.mjs  # recorrido completo en Chrome sin pantalla (
 El modo `?mock=1` solo funciona en `localhost`; el módulo falso vive en `test-admin/mock/` (no se despliega). El contenido inicial (primera publicación) sale de `admin/seed.json`. Los items `video` antiguos no los acepta el esquema del Worker: el panel los muestra en solo lectura y los omite al publicar (lo avisa).
 
 El CSP permite imágenes de `https://allin1jax.com` y `https://www.allin1jax.com` (`img-src` en `admin/_headers` y `src/http.js`, una prueba exige que sean iguales) para ver las fotos ya publicadas (`SITE_IMG_BASE` en `admin/js/config.js`).
+
+### Videos subidos desde el panel
+
+El esquema acepta `{type:'video', src:<media/uuid.mp4|mov|webm>, poster:<media/uuid-p.jpg>}` (el cartel es obligatorio) y, por compatibilidad, el video heredado exacto `assets/gallery/allin1.mp4` (lista blanca `LEGACY_VIDEOS`). El cartel se genera en el navegador desde un fotograma. Límites: 95 MB por archivo (el plan gratis de Cloudflare limita el cuerpo a 100 MB). Aviso: un `.mov` del iPhone en HEVC no se reproduce en Chrome/Firefox; con Ajustes > Cámara > Formatos > Más compatible (H.264) se ve en todos. El CSP del panel agrega `media-src` (`'self'`, `media.allin1jax.com`, `allin1jax.com`, `www.allin1jax.com`, `blob:` para el cartel local).
 
 ## PASOS HUMANOS (nada de esto se hizo desde el código)
 

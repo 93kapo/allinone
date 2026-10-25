@@ -1,14 +1,26 @@
 // Fotos y videos + Agregar video de YouTube.
 import { h } from './dom.js';
 import { t } from './i18n.js';
-import { app, register, go, render, field, selectField, itemError, thumbEl, imgUrl, controls, backButton, msg, announce } from './app.js';
+import { app, register, go, render, field, selectField, itemError, thumbEl, imgUrl, controls, backButton, msg, announce, videoEl } from './app.js';
 import { S, set } from './store.js';
 import { setCaption, addItem, makeId, updateItem } from './lib/listops.js';
 import { parseYouTubeId, youtubeThumb } from './lib/youtube.js';
-import { Q, enqueue, retry, drop } from './uploads.js';
+import { Q, enqueue, enqueueVideo, retry, drop } from './uploads.js';
 import { apiErrorMessage } from './lib/errors.js';
+import { formatSize } from './lib/video.js';
 
 const CATS = () => [['interior', t('catInterior')], ['exterior', t('catExterior')], ['remodeling', t('catRemodeling')]];
+
+let vpicker = null;
+function videoPicker() {
+  if (vpicker) return vpicker;
+  vpicker = document.createElement('input');
+  vpicker.type = 'file'; vpicker.accept = 'video/*'; vpicker.hidden = true; vpicker.id = 'video-picker';
+  vpicker.setAttribute('aria-hidden', 'true'); vpicker.tabIndex = -1;
+  vpicker.addEventListener('change', () => { const f = vpicker.files[0]; vpicker.value = ''; if (f) enqueueVideo(f); });
+  document.body.append(vpicker);
+  return vpicker;
+}
 
 let picker = null;
 function filePicker() {
@@ -31,8 +43,10 @@ function uploadPanel() {
   if (active) {
     const pct = active.status === 'prep' ? 0 : Math.round(active.progress * 100);
     const bar = h('div'); bar.style.width = `${pct}%`;
+    const isV = active.kind === 'video';
     box.append(h('div', { class: 'msg' },
-      h('p', null, active.status === 'prep' ? t('preparing', { i, n }) : `${t('uploading', { i, n })} ${pct}%`),
+      isV ? h('p', null, t('videoFile', { name: active.name, size: formatSize(active.file.size) })) : null,
+      h('p', null, isV ? (active.status === 'prep' ? t('preparingVideo') : t('uploadingVideo', { pct })) : (active.status === 'prep' ? t('preparing', { i, n }) : `${t('uploading', { i, n })} ${pct}%`)),
       h('div', { class: 'progress', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': String(pct) }, bar)));
   }
   for (const j of jobs.filter((x) => x.status === 'error')) {
@@ -59,19 +73,15 @@ Q.onItem = () => {
 };
 
 function galleryCard(it, idx, list) {
-  if (it.type === 'video') {
-    return h('article', { class: 'card' },
-      h('div', { class: 'card-head' }, thumbEl(imgUrl(it.poster)),
-        h('div', { class: 'card-body' }, h('span', { class: 'tag' }, t('legacyVideo').split('.')[0]), h('p', null, it.caption.es || it.caption.en || t('noTitle')), msg('warn', t('legacyDropWarn', { name: it.caption.es || it.caption.en || t('noTitle') })))));
-  }
-  const url = it.type === 'youtube' ? youtubeThumb(it.youtubeId) : imgUrl(it.poster || it.src);
+  const url = it.type === 'youtube' ? youtubeThumb(it.youtubeId) : it.type === 'video' ? imgUrl(it.poster) : imgUrl(it.poster || it.src);
+  const media = it.type === 'video' ? videoEl(it) : thumbEl(url);
   const upd = (patch) => { set('gallery', updateItem(S.state.gallery, it.id, patch)); };
   const live = () => S.state.gallery.find((x) => x.id === it.id);
   const titleOf = it.caption.es || t('noTitle');
   return h('article', { class: `card${it.hidden ? ' is-hidden' : ''}` },
-    h('div', { class: 'card-head' }, thumbEl(url),
+    h('div', { class: 'card-head' }, media,
       h('div', { class: 'card-body' },
-        h('span', { class: 'tag' }, it.type === 'youtube' ? t('youtubeVideo') : t('photoItem')),
+        h('span', { class: 'tag' }, it.type === 'youtube' ? t('youtubeVideo') : it.type === 'video' ? t('videoItem') : t('photoItem')),
         it.hidden ? h('span', { class: 'tag tag-hidden' }, t('hiddenTag')) : null,
         selectField({ label: t('category'), value: it.category, options: CATS(), placeholder: t('chooseCategory'), section: 'gallery', id: it.id, name: 'category', onChange: (v) => upd({ category: v }) }),
         field({ label: t('titleEs'), value: it.caption.es, max: 80, section: 'gallery', id: it.id, name: 'caption.es', onInput: (v) => { set('gallery', S.state.gallery.map((x) => (x.id === it.id ? setCaption(x, 'es', v) : x))); } }),
@@ -85,14 +95,16 @@ register('gallery', () => {
   const list = S.state.gallery;
   root.append(backButton(), h('h1', null, t('photosTitle')), msg('warn', t('photoCare')));
   const q = app.ui.quota;
-  if (q) root.append(h('p', { class: 'help' }, q.files <= 0 ? t('quotaNone') : t('quotaLeft', { n: Math.floor(q.files / 2) })));
+  if (q) root.append(h('p', { class: 'help' }, (q.files <= 0 ? t('quotaNone') : t('quotaLeft', { n: Math.floor(q.files / 2) })) + ' ' + t('quotaVideos', { n: q.videos })));
   else if (q === null) {
     app.ui.quota = false;
-    app.api.me().then((m) => { app.ui.quota = { files: m.cuotas.archivosRestantes }; if (app.screen === 'gallery') { const a = document.activeElement; if (!(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) render(); } }).catch(() => { /* la cuota es solo una ayuda */ });
+    app.api.me().then((m) => { app.ui.quota = { files: m.cuotas.archivosRestantes, videos: m.cuotas.videosRestantes ?? 0 }; if (app.screen === 'gallery') { const a = document.activeElement; if (!(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) render(); } }).catch(() => { /* la cuota es solo una ayuda */ });
   }
   root.append(h('div', { class: 'stack' },
     h('button', { class: 'btn btn-primary btn-big', type: 'button', onclick: () => filePicker().click() }, t('addPhotos')),
+    h('button', { class: 'btn btn-primary btn-big', type: 'button', id: 'add-video', onclick: () => videoPicker().click() }, t('addVideo')),
     h('button', { class: 'btn btn-secondary btn-big', type: 'button', onclick: () => go('youtube') }, t('addYouTube'))));
+  root.append(h('p', { class: 'help' }, t('videoTips')));
   root.append(uploadPanel());
   if (!list.length) root.append(h('p', { class: 'msg' }, t('empty')));
   root.append(h('div', null, list.map((it, i) => galleryCard(it, i, list))));
