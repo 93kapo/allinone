@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "version": "seed-1",
+  "updatedAt": "2026-10-25T02:01:14.187Z",
+  "updatedBy": "make-seed",
+  "settings": {
+    "email": "",
+    "social": {
+      "facebook": "",
+      "instagram": "",
+      "google": "",
+      "youtube": "",
+      "tiktok": ""
+    },
+    "showLicensed": false,
+    "licenseNumber": ""
+  },
+  "gallery": [
+    {
+      "id": "g1",
+      "type": "video",
+      "category": "exterior",
+      "src": "assets/gallery/allin1.mp4",
+      "poster": "assets/gallery/allin1-poster.jpg",
+      "caption": {
+        "en": "Exterior project",
+        "es": "Proyecto exterior"
+      },
+      "alt": {
+        "en": "Crew member working on the exterior siding and trim of a house",
+        "es": "Trabajador en el exterior de una casa, trabajando en el revestimiento y el acabado"
+      },
+      "hidden": false
+    }
+  ],
+  "beforeAfter": [
+    {
+      "id": "b1",
+      "before": "assets/gallery/ba-1-before.jpg",
+      "after": "assets/gallery/ba-1-after.jpg",
+      "alt": {
+        "en": "Exterior wood louvers before and after refinishing",
+        "es": "Persianas de madera exteriores antes y después del acabado"
+      },
+      "caption": {
+        "en": "Exterior wood finishing",
+        "es": "Acabado de madera exterior"
+      },
+      "hidden": false
+    }
+  ],
+  "reviews": []
+}

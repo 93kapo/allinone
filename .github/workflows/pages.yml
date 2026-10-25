@@ -24,8 +24,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Stage site (publish only what the site needs)
+        run: |
+          mkdir -p _site
+          rsync -a --exclude='/tests/' --exclude='/tools/' --exclude='/assets/content-seed.json' web/ _site/
+          test -f _site/index.html && test -f _site/es/index.html && test -f _site/assets/js/content.js
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: web
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4

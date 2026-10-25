@@ -43,3 +43,10 @@ window.SITE_CONFIG = {
   formEndpoint: "",
   formAccessKey: ""   // Web3Forms access key (leave "" for Formspree)
 };
+
+/* Editable content (gallery, before/after, reviews, social links) is refreshed from this API after the page loads.
+   If it is unreachable the content embedded in the page is kept. Leave "" to disable.
+   El contenido editable se actualiza desde esta API; si no responde se conserva el contenido embebido. */
+window.CONTENT_API = "https://admin.allin1jax.com/api/content";
+/* Only absolute image/video URLs from this origin are accepted (keys like "media/abc.webp" resolve against it). */
+window.MEDIA_ORIGIN = "https://media.allin1jax.com";
