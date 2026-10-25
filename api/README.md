@@ -50,6 +50,20 @@ npm test            # node:test, sin red: R2 simulado, claves RSA de WebCrypto y
 npm run check       # wrangler deploy --dry-run: valida configuración y empaquetado (no despliega)
 ```
 
+## Panel del dueño (`admin/`)
+
+JS plano con módulos ES, sin build. Firebase Auth (SDK 10.12.2 desde gstatic, solo correo y contraseña). `admin/js/schema.js` es una **copia exacta** de `src/schema.js` (una prueba lo exige: si cambia el esquema, copiar de nuevo) y se usa para validar en el navegador igual que el Worker.
+
+```
+npm run test:admin                 # módulos puros: enlaces de YouTube, tamaños, listas, validación, errores, modo de prueba
+node test-admin/dev-server.js      # http://localhost:8786/?mock=1  (Worker real + R2 simulado + acceso falso; solo para pruebas)
+node test-admin/browser-check.mjs  # recorrido completo en Chrome sin pantalla (con el servidor de arriba encendido)
+```
+
+El modo `?mock=1` solo funciona en `localhost`; el módulo falso vive en `test-admin/mock/` (no se despliega). El contenido inicial (primera publicación) sale de `admin/seed.json`. Los items `video` antiguos no los acepta el esquema del Worker: el panel los muestra en solo lectura y los omite al publicar (lo avisa).
+
+Pendiente de decidir: las fotos que ya viven en el sitio (`assets/gallery/...`) no se pueden mostrar en el panel porque el CSP no permite imágenes de `https://allin1jax.com`; se ve un recuadro. Para verlas, agregar ese origen a `img-src` en `admin/_headers` y `src/http.js` y poner `SITE_IMG_BASE` en `admin/js/config.js`.
+
 ## PASOS HUMANOS (nada de esto se hizo desde el código)
 
 1. **Cloudflare**: crear el bucket R2 `allin1-media` (`npx wrangler r2 bucket create allin1-media`). Activar el **dominio personalizado `media.allin1jax.com`** en ese bucket (solo lectura pública). No activar `r2.dev`.
