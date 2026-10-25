@@ -64,7 +64,7 @@ npm run check       # wrangler deploy --dry-run: valida configuración y empaque
 ## Qué NO está probado
 
 - **Cloudflare real**: no se desplegó nada ni se corrió `wrangler dev`; solo `wrangler deploy --dry-run` (configuración y empaquetado válidos).
-- **R2 real**: las pruebas usan un R2 simulado. Se asume que `put` con `onlyIf` (`etagMatches` / `etagDoesNotMatch:"*"`) devuelve `null` al fallar la condición y que `list({include:['customMetadata']})` devuelve los metadatos. Hay que comprobarlo en el primer despliegue.
+- **R2 real**: las pruebas usan un R2 simulado. Se comprobó contra el R2 local de miniflare (vía `getPlatformProxy`, simulador de Cloudflare) que `put` con `onlyIf` (`etagMatches` / `etagDoesNotMatch:"*"`) devuelve `null` al fallar la condición y escribe cuando se cumple, y que `list({include:['customMetadata']})` devuelve los metadatos. Aun así no es el R2 real: comprobarlo en el primer despliegue.
 - **JWKS real de Google**: probado con un JWKS simulado y con `fetch` simulado hacia el resolvedor remoto de `jose`; no contra `googleapis.com`.
 - **Tokens reales de Firebase** (incluido que traigan `email_verified`).
 - **Límites del plan gratuito** (CPU, tamaño de petición, operaciones de R2) y el comportamiento de `_headers` en los assets desplegados.
