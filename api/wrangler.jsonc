@@ -20,8 +20,8 @@
   // `npx wrangler secret put ALLOWED_EMAILS` y NUNCA se escribe en este archivo (el repo es público).
   // Opcionales (también como vars): MAX_BUCKET_MB (4000), QUOTA_FILES_PER_DAY (40), QUOTA_MB_PER_DAY (80),
   // ADMIN_DISABLED ("1" apaga todo lo autenticado: interruptor de emergencia).
-  "vars": { "FIREBASE_PROJECT_ID": "allin1-d68ac" }
+  "vars": { "FIREBASE_PROJECT_ID": "allin1-d68ac" },
 
   // Dominio personalizado: se activa después, a propósito (ver README, pasos humanos):
-  // "routes": [{ "pattern": "admin.allin1jax.com", "custom_domain": true }]
+  "routes": [{ "pattern": "admin.allin1jax.com", "custom_domain": true }]
 }
