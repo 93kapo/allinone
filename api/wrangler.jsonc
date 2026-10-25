@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "allin1-api",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": true,
+  "preview_urls": false,
+
+  // Archivos subidos y contenido. El bucket se crea a mano (ver README).
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "allin1-media" }],
+
+  // El panel estático vive en ./admin; solo /api/* pasa primero por el Worker.
+  "assets": {
+    "directory": "./admin",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+
+  // Solo valores NO secretos. ALLOWED_EMAILS es un SECRET: se carga con
+  // `npx wrangler secret put ALLOWED_EMAILS` y NUNCA se escribe en este archivo (el repo es público).
+  // Opcionales (también como vars): MAX_BUCKET_MB (4000), QUOTA_FILES_PER_DAY (40), QUOTA_MB_PER_DAY (80),
+  // ADMIN_DISABLED ("1" apaga todo lo autenticado: interruptor de emergencia).
+  "vars": { "FIREBASE_PROJECT_ID": "allin1-d68ac" }
+
+  // Dominio personalizado: se activa después, a propósito (ver README, pasos humanos):
+  // "routes": [{ "pattern": "admin.allin1jax.com", "custom_domain": true }]
+}
