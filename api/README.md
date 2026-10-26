@@ -64,6 +64,10 @@ El modo `?mock=1` solo funciona en `localhost`; el módulo falso vive en `test-a
 
 El CSP permite imágenes de `https://allin1jax.com` y `https://www.allin1jax.com` (`img-src` en `admin/_headers` y `src/http.js`, una prueba exige que sean iguales) para ver las fotos ya publicadas (`SITE_IMG_BASE` en `admin/js/config.js`).
 
+### Diseño del panel
+
+Tipografía **Poppins** (OFL, archivos `admin/assets/fonts/*.woff2` + `OFL-Poppins.txt`; por eso el CSP lleva `font-src 'self'`), logos reales en `admin/assets/`, tokens CSS y modo oscuro automático en `admin/panel.css`. Solo se animan `transform` y `opacity`; con "reducir movimiento" no hay desplazamientos. El selector de encuadre ("Elegir qué parte se ve") guarda `focusBefore/After`, `zoomBefore/After` y `shape` en cada par (y `focus` en fotos); el sitio los aplica con el mismo CSS (`frameStyle` en `web/assets/js/content.js`, con prueba de igualdad). Capturas: `node test-admin/screenshots.mjs <carpeta>` y `node test-admin/framing-shots.mjs <carpeta>`.
+
 ### Videos subidos desde el panel
 
 El esquema acepta `{type:'video', src:<media/uuid.mp4|mov|webm>, poster:<media/uuid-p.jpg>}` (el cartel es obligatorio) y, por compatibilidad, el video heredado exacto `assets/gallery/allin1.mp4` (lista blanca `LEGACY_VIDEOS`). El cartel se genera en el navegador desde un fotograma. Límites: 95 MB por archivo (el plan gratis de Cloudflare limita el cuerpo a 100 MB). Aviso: un `.mov` del iPhone en HEVC no se reproduce en Chrome/Firefox; con Ajustes > Cámara > Formatos > Más compatible (H.264) se ve en todos. El CSP del panel agrega `media-src` (`'self'`, `media.allin1jax.com`, `allin1jax.com`, `www.allin1jax.com`, `blob:` para el cartel local).

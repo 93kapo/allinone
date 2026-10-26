@@ -95,7 +95,7 @@ register('ba', () => {
     h('section', { class: 'card', 'aria-label': t('baCreate') }, h('h2', null, t('baCreate')),
       h('div', { class: 'pair' }, slot('before', t('baBefore')), slot('after', t('baAfter'))),
       err, frameBtn, esIn, enIn, localErr, add),
-    !list.length ? h('p', { class: 'msg' }, t('empty')) : null,
+    ...(!list.length ? [h('p', { class: 'msg' }, t('empty'))] : []),
     h('div', { class: 'cards' }, list.map((it, i) => baCard(it, i, list))));
   return root;
 });
