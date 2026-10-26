@@ -1,6 +1,7 @@
 // Arma lo que se envía al Worker y lo valida con el MISMO validador del Worker (js/schema.js
 // es una copia exacta de src/schema.js; una prueba comprueba que son idénticas).
 import { validateContent, collectMediaKeys } from '../schema.js';
+import { framingFields } from './framing.js';
 
 const SOCIALS = ['facebook', 'instagram', 'google', 'youtube', 'tiktok'];
 const pubKeys = (o) => Object.fromEntries(Object.entries(o).filter(([k]) => !k.startsWith('_')));
@@ -16,12 +17,13 @@ export function buildPayload(state) {
     if (it.poster) o.poster = it.poster;
     if (it.w !== undefined) o.w = it.w;
     if (it.h !== undefined) o.h = it.h;
+    if (it.focus) o.focus = { x: it.focus.x, y: it.focus.y };
     const alt = pair(it.alt);
     if (alt.es || alt.en) o.alt = alt;
     gallery.push(o); map.gallery.push(it.id);
   }
   for (const it of state.beforeAfter) {
-    const o = { id: it.id, before: it.before, after: it.after, caption: pair(it.caption), hidden: !!it.hidden };
+    const o = { id: it.id, before: it.before, after: it.after, caption: pair(it.caption), hidden: !!it.hidden, ...framingFields(it) };
     const alt = pair(it.alt);
     if (alt.es || alt.en) o.alt = alt;
     beforeAfter.push(o); map.beforeAfter.push(it.id);

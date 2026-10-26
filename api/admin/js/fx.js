@@ -130,3 +130,48 @@ export function countUp(el, to, ms = 700) {
   };
   requestAnimationFrame(step);
 }
+
+// ---- Ventana grande (para el selector de encuadre): fondo borroso, foco atrapado, Esc cancela ----
+export function modal({ label, node, onCancel }) {
+  closeDialog();
+  const root = $('#dialog-root');
+  const prev = document.activeElement;
+  const inertEls = ['#app', '.top', '#bar'].map((q) => $(q)).filter(Boolean);
+  const back = h('div', { class: 'backdrop' });
+  const panel = h('div', { class: 'sheet sheet-big', role: 'dialog', 'aria-modal': 'true', 'aria-label': label, tabindex: '-1' }, h('span', { class: 'grab', 'aria-hidden': 'true' }), node);
+  const wrap = h('div', { class: 'dlg' }, back, panel);
+  let closed = false;
+  const api = {
+    panel,
+    close() {
+      if (closed) return;
+      closed = true;
+      for (const e of inertEls) e.inert = false;
+      document.removeEventListener('keydown', onKey, true);
+      const a = anim(panel, [{ transform: 'translateY(0)', opacity: 1 }, { transform: 'translateY(24px)', opacity: 0 }], { duration: reduced() ? 1 : 180 });
+      anim(back, [{ opacity: 1 }, { opacity: 0 }], { duration: reduced() ? 1 : 180 });
+      const done = () => wrap.remove();
+      a ? (a.onfinish = done) : done();
+      if (prev && prev.isConnected) { try { prev.focus({ preventScroll: true }); } catch { /* nada */ } }
+    },
+  };
+  const cancel = () => { api.close(); if (onCancel) onCancel(); };
+  const onKey = (e) => {
+    if (e.key === 'Escape') { e.preventDefault(); cancel(); return; }
+    if (e.key === 'Tab') {
+      const f = [...panel.querySelectorAll('button, input, [tabindex="0"]')].filter((x) => !x.disabled && x.offsetParent !== null);
+      if (!f.length) return;
+      const i = f.indexOf(document.activeElement);
+      if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+    }
+  };
+  back.addEventListener('click', cancel);
+  root.append(wrap);
+  for (const e of inertEls) e.inert = true;
+  document.addEventListener('keydown', onKey, true);
+  anim(back, [{ opacity: 0 }, { opacity: 1 }], { duration: reduced() ? 1 : 220 });
+  anim(panel, [{ transform: 'translateY(28px) scale(.98)', opacity: 0 }, { transform: 'translateY(0) scale(1)', opacity: 1 }], { duration: reduced() ? 1 : 320 });
+  panel.focus({ preventScroll: true });
+  api.cancel = cancel;
+  return api;
+}

@@ -169,3 +169,36 @@ test('firma de imagen y huérfanos (función pura v2)', () => {
   ];
   assert.deepEqual(findOrphans(items, NOW, 30), ['a']);
 });
+
+test('encuadre opcional: contenido viejo sigue válido; valores válidos se conservan', () => {
+  const c = validContent({ beforeAfter: [{ id: 'b1', before: 'assets/gallery/a.jpg', after: 'assets/gallery/b.jpg', alt: { es: 'x' } }] });
+  const r = v(c);
+  assert.equal(r.ok, true);
+  for (const k of ['focusBefore', 'focusAfter', 'zoomBefore', 'zoomAfter', 'shape']) assert.equal(k in r.value.beforeAfter[0], false, 'sin valores por defecto inventados');
+  const c2 = validContent({ beforeAfter: [{ id: 'b1', before: 'assets/gallery/a.jpg', after: 'assets/gallery/b.jpg', alt: { es: 'x' },
+    focusBefore: { x: 0, y: 100 }, focusAfter: { x: 50, y: 33 }, zoomBefore: 1, zoomAfter: 2.456, shape: 'tall' }] });
+  const r2 = v(c2);
+  assert.equal(r2.ok, true, JSON.stringify(r2.errores));
+  assert.deepEqual(r2.value.beforeAfter[0].focusBefore, { x: 0, y: 100 });
+  assert.equal(r2.value.beforeAfter[0].zoomAfter, 2.46);
+  assert.equal(r2.value.beforeAfter[0].shape, 'tall');
+  for (const s of ['wide', 'tall', 'square']) assert.equal(v(validContent({ beforeAfter: [{ id: 'b', before: 'assets/gallery/a.jpg', after: 'assets/gallery/b.jpg', alt: { es: 'x' }, shape: s }] })).ok, true);
+  const g = validContent(); g.gallery[0].focus = { x: 20, y: 80 };
+  assert.deepEqual(v(g).value.gallery[0].focus, { x: 20, y: 80 });
+});
+
+test('encuadre: valores fuera de rango, tipos raros y claves extra se rechazan', () => {
+  const ba = (extra) => validContent({ beforeAfter: [{ id: 'b', before: 'assets/gallery/a.jpg', after: 'assets/gallery/b.jpg', alt: { es: 'x' }, ...extra }] });
+  for (const f of [{ x: -1, y: 0 }, { x: 101, y: 0 }, { x: 5.5, y: 0 }, { x: '5', y: 0 }, { x: 5 }, { y: 5 }, {}, 'centro', [50, 50], 7, { x: NaN, y: 1 }, { x: 1, y: Infinity }]) {
+    bad(ba({ focusBefore: f }), 'beforeAfter[0].focusBefore');
+    bad(ba({ focusAfter: f }), 'beforeAfter[0].focusAfter');
+  }
+  for (const z of [0.99, 3.01, 0, -1, '2', NaN, Infinity, [], {}, true]) { bad(ba({ zoomBefore: z }), 'beforeAfter[0].zoomBefore'); bad(ba({ zoomAfter: z }), 'beforeAfter[0].zoomAfter'); }
+  for (const s of ['Wide', 'ancha', '', 1, [], {}, true]) bad(ba({ shape: s }), 'beforeAfter[0].shape');
+  bad(ba({ focus: { x: 1, y: 1 } }), 'beforeAfter[0].focus'); // clave que no existe en pares
+  bad(ba({ zoom: 2 }), 'beforeAfter[0].zoom');
+  bad(ba({ focusBefore: { x: 1, y: 1, z: 2 } }), 'beforeAfter[0].focusBefore.z');
+  const g = (f) => { const c = validContent(); c.gallery[0].focus = f; return c; };
+  bad(g({ x: 101, y: 0 }), 'gallery[0].focus'); bad(g('x'), 'gallery[0].focus'); bad(g({ x: 1, y: 1.5 }), 'gallery[0].focus');
+  const z = validContent(); z.gallery[0].zoom = 2; bad(z, 'gallery[0].zoom');
+});

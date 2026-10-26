@@ -218,3 +218,29 @@ test('site renders video items with poster, controls, playsinline and preload no
   assert.ok(line, 'lightbox video branch exists');
   assert.ok(/m\.controls = true/.test(line) && /m\.playsInline = true/.test(line) && /m\.preload = 'none'/.test(line) && /m\.poster = it\.poster/.test(line));
 });
+
+test('framing: focus / zoom / shape are validated and fall back to the defaults', function () {
+  var pair = function (extra) { var o = { id: 'a', before: 'x/b.jpg', after: 'x/a.jpg' }; for (var k in extra) o[k] = extra[k]; return o; };
+  var run = function (extra) { return C.toBeforeAfter(C.validateContent(base({ beforeAfter: [pair(extra)] })), { base: '../', mediaOrigin: MEDIA })[0]; };
+  var d = run({});
+  same(d.focusBefore, { x: 50, y: 50 }); same(d.focusAfter, { x: 50, y: 50 }); assert.equal(d.zoomBefore, 1); assert.equal(d.zoomAfter, 1); assert.equal(d.shape, '');
+  var ok = run({ focusBefore: { x: 10, y: 90 }, focusAfter: { x: 0, y: 100 }, zoomBefore: 2.5, zoomAfter: 1.234, shape: 'tall' });
+  same(ok.focusBefore, { x: 10, y: 90 }); same(ok.focusAfter, { x: 0, y: 100 }); assert.equal(ok.zoomBefore, 2.5); assert.equal(ok.zoomAfter, 1.23); assert.equal(ok.shape, 'tall');
+  var bad = run({ focusBefore: { x: 'a', y: 1 }, focusAfter: 'centro', zoomBefore: 9, zoomAfter: 0.2, shape: 'banner' });
+  same(bad.focusBefore, { x: 50, y: 50 }); same(bad.focusAfter, { x: 50, y: 50 }); assert.equal(bad.zoomBefore, 1); assert.equal(bad.zoomAfter, 1); assert.equal(bad.shape, '');
+  var clamp = run({ focusBefore: { x: -20, y: 400 } });
+  same(clamp.focusBefore, { x: 0, y: 100 });
+  var g = C.toGalleryItems(C.validateContent(base({ gallery: [img('f', { focus: { x: 20, y: 70 } }), img('n')] })), { base: '../' });
+  same(g[0].focus, { x: 20, y: 70 }); same(g[1].focus, { x: 50, y: 50 });
+});
+
+test('framing: frameStyle gives the CSS the site applies; main.js and styles.css use it', function () {
+  same(C.frameStyle({ x: 30, y: 60 }, 2), { objectPosition: '30% 60%', transformOrigin: '30% 60%', transform: 'scale(2)' });
+  same(C.frameStyle(undefined, undefined), { objectPosition: '50% 50%', transformOrigin: '50% 50%', transform: 'none' });
+  var js = fs.readFileSync(path.join(__dirname, '..', 'assets', 'js', 'main.js'), 'utf8');
+  var css = fs.readFileSync(path.join(__dirname, '..', 'assets', 'css', 'styles.css'), 'utf8');
+  assert.ok(/AC\.frameStyle\(kind === 'b' \? p\.focusBefore/.test(js) && /naturalHeight > i\.naturalWidth \* 1\.1/.test(js) && /data-shape/.test(js));
+  assert.ok(/\.ba\[data-shape=tall\]\{aspect-ratio:3\/4;width:min\(100%,calc\(80vh\*\.75\)\)/.test(css));
+  assert.ok(/\.ba\[data-shape=square\]\{aspect-ratio:1\/1/.test(css));
+  assert.ok(/\.ba-layer\{[^}]*overflow:hidden/.test(css));
+});

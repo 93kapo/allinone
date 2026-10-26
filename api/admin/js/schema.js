@@ -16,8 +16,9 @@ const NETWORKS = {
   youtube: ['youtube.com', 'youtu.be'],
   tiktok: ['tiktok.com'],
 };
-const GALLERY_KEYS = ['id', 'type', 'category', 'src', 'youtubeId', 'poster', 'w', 'h', 'caption', 'alt', 'hidden'];
-const BA_KEYS = ['id', 'before', 'after', 'alt', 'caption', 'hidden'];
+const GALLERY_KEYS = ['id', 'type', 'category', 'src', 'youtubeId', 'poster', 'w', 'h', 'caption', 'alt', 'hidden', 'focus'];
+const BA_KEYS = ['id', 'before', 'after', 'alt', 'caption', 'hidden', 'focusBefore', 'focusAfter', 'zoomBefore', 'zoomAfter', 'shape'];
+const SHAPES = ['wide', 'tall', 'square'];
 const REVIEW_KEYS = ['id', 'name', 'text', 'source', 'date', 'hidden'];
 const CATEGORIES = ['interior', 'exterior', 'remodeling'];
 const SOURCES = ['google', 'facebook', 'nextdoor', 'directo'];
@@ -139,6 +140,22 @@ export function validateContent(input, opts = {}) {
     if (!videoOk(v, mediaKeys)) { err(path, 'El video no es válido o no se subió al sitio.'); return ''; }
     return v;
   };
+  // Encuadre opcional: punto focal {x,y} (enteros 0-100), zoom 1-3 y forma del marco.
+  const focus = (o, k, path) => {
+    const v = get(o, k);
+    if (v === undefined || v === null) return undefined;
+    if (!isObj(v)) { err(path, 'El punto de enfoque no es válido.'); return undefined; }
+    checkKeys(v, ['x', 'y'], path);
+    const x = get(v, 'x'), y = get(v, 'y');
+    if (!Number.isInteger(x) || x < 0 || x > 100 || !Number.isInteger(y) || y < 0 || y > 100) { err(path, 'El punto de enfoque debe tener x e y enteros entre 0 y 100.'); return undefined; }
+    return { x, y };
+  };
+  const zoom = (o, k, path) => {
+    const v = get(o, k);
+    if (v === undefined || v === null) return undefined;
+    if (typeof v !== 'number' || !Number.isFinite(v) || v < 1 || v > 3) { err(path, 'El acercamiento debe ser un número entre 1 y 3.'); return undefined; }
+    return Math.round(v * 100) / 100;
+  };
   const pair = (o, k, path, maxEs, maxEn, needEs) => {
     const p = sub(o, k, path);
     checkKeys(p, ['es', 'en'], path);
@@ -236,6 +253,8 @@ export function validateContent(input, opts = {}) {
         out.caption = caption;
         out.alt = { es: altIn.es || caption.es, en: altIn.en || caption.en || caption.es };
         out.hidden = bool(get(item, 'hidden'), `${p}.hidden`);
+        const gf = focus(item, 'focus', `${p}.focus`);
+        if (gf) out.focus = gf;
         gallery.push(out);
       });
     }
@@ -259,7 +278,16 @@ export function validateContent(input, opts = {}) {
         const altIn = pair(item, 'alt', `${p}.alt`, 160, 160, false);
         const alt = { es: altIn.es || caption.es, en: altIn.en || caption.en || caption.es };
         if (!alt.es) err(`${p}.alt.es`, 'Escribe una descripción de la foto en español.');
-        beforeAfter.push({ id, before, after, alt, caption, hidden: bool(get(item, 'hidden'), `${p}.hidden`) });
+        const ba = { id, before, after, alt, caption, hidden: bool(get(item, 'hidden'), `${p}.hidden`) };
+        for (const [k, fn] of [['focusBefore', focus], ['focusAfter', focus], ['zoomBefore', zoom], ['zoomAfter', zoom]]) {
+          const v = fn(item, k, `${p}.${k}`);
+          if (v !== undefined) ba[k] = v;
+        }
+        const shape = get(item, 'shape');
+        if (shape !== undefined && shape !== null) {
+          if (!SHAPES.includes(shape)) err(`${p}.shape`, 'La forma del marco debe ser horizontal, vertical o cuadrada.'); else ba.shape = shape;
+        }
+        beforeAfter.push(ba);
       });
     }
   }

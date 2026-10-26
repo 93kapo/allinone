@@ -78,6 +78,19 @@
 
   /* ---- Validation (tolerant: invalid elements are dropped, unknown keys ignored) ---- */
   function bi(v) { var o = isObj(v) ? v : {}; return { es: str(o.es, 600), en: str(o.en, 600) }; }
+  /* Framing (focal point / zoom / frame shape). Invalid or missing values fall back to the defaults. */
+  var SHAPES = ['wide', 'tall', 'square'];
+  function focusOf(v) {
+    if (!isObj(v) || typeof v.x !== 'number' || typeof v.y !== 'number' || !isFinite(v.x) || !isFinite(v.y)) return { x: 50, y: 50 };
+    return { x: Math.min(100, Math.max(0, Math.round(v.x))), y: Math.min(100, Math.max(0, Math.round(v.y))) };
+  }
+  function zoomOf(v) { return typeof v === 'number' && isFinite(v) && v >= 1 && v <= 3 ? Math.round(v * 100) / 100 : 1; }
+  function shapeOf(v) { return typeof v === 'string' && indexOf(SHAPES, v) >= 0 ? v : ''; }
+  /* The exact CSS values both the panel and the site apply to a framed photo. */
+  function frameStyle(focus, zoom) {
+    var f = focusOf(focus), z = zoomOf(zoom), p = f.x + '% ' + f.y + '%';
+    return { objectPosition: p, transformOrigin: p, transform: z === 1 ? 'none' : 'scale(' + z + ')' };
+  }
   function dim(v) { return typeof v === 'number' && isFinite(v) && v > 0 && v <= 20000 ? Math.round(v) : 0; }
 
   function validateContent(json) {
@@ -103,7 +116,7 @@
       it = g[i];
       if (!isObj(it) || typeof it.id !== 'string' || !ID_RE.test(it.id) || seen[it.id] || indexOf(TYPES, it.type) < 0) continue;
       var e = { id: it.id, type: it.type, category: indexOf(CATEGORIES, it.category) >= 0 ? it.category : '', src: '', youtubeId: '', poster: str(it.poster, 500),
-        w: dim(it.w), h: dim(it.h), caption: bi(it.caption), alt: bi(it.alt), hidden: it.hidden === true };
+        w: dim(it.w), h: dim(it.h), caption: bi(it.caption), alt: bi(it.alt), hidden: it.hidden === true, focus: focusOf(it.focus) };
       if (it.type === 'youtube') { if (typeof it.youtubeId !== 'string' || !YT_RE.test(it.youtubeId)) continue; e.youtubeId = it.youtubeId; }
       else { e.src = str(it.src, 500); if (!e.src) continue; }
       seen[it.id] = 1; out.gallery.push(e);
@@ -116,7 +129,8 @@
       if (!isObj(it) || typeof it.id !== 'string' || !ID_RE.test(it.id) || seen[it.id]) continue;
       var bf = str(it.before, 500), af = str(it.after, 500);
       if (!bf || !af) continue;
-      seen[it.id] = 1; out.beforeAfter.push({ id: it.id, before: bf, after: af, alt: bi(it.alt), caption: bi(it.caption), hidden: it.hidden === true });
+      seen[it.id] = 1; out.beforeAfter.push({ id: it.id, before: bf, after: af, alt: bi(it.alt), caption: bi(it.caption), hidden: it.hidden === true,
+        focusBefore: focusOf(it.focusBefore), focusAfter: focusOf(it.focusAfter), zoomBefore: zoomOf(it.zoomBefore), zoomAfter: zoomOf(it.zoomAfter), shape: shapeOf(it.shape) });
     }
 
     seen = {};
@@ -141,7 +155,7 @@
     for (var i = 0; i < list.length; i++) {
       var it = list[i];
       if (!it || it.hidden === true) continue;
-      var o = { id: it.id, type: it.type, category: it.category || '', src: '', poster: '', youtubeId: '', thumb: '', embed: '', w: it.w || 0, h: it.h || 0, caption: it.caption || { es: '', en: '' }, alt: it.alt || { es: '', en: '' } };
+      var o = { id: it.id, type: it.type, category: it.category || '', src: '', poster: '', youtubeId: '', thumb: '', embed: '', w: it.w || 0, h: it.h || 0, focus: focusOf(it.focus), caption: it.caption || { es: '', en: '' }, alt: it.alt || { es: '', en: '' } };
       if (it.type === 'youtube') {
         o.youtubeId = it.youtubeId; o.embed = youtubeEmbed(it.youtubeId); o.thumb = youtubeThumb(it.youtubeId);
         if (!o.embed) continue;
@@ -164,7 +178,8 @@
       if (!it || it.hidden === true) continue;
       var bf = resolveSrc(opts.base, it.before, opts.mediaOrigin), af = resolveSrc(opts.base, it.after, opts.mediaOrigin);
       if (!bf || !af) continue;
-      out.push({ id: it.id, before: bf, after: af, alt: it.alt || { es: '', en: '' }, caption: it.caption || { es: '', en: '' } });
+      out.push({ id: it.id, before: bf, after: af, alt: it.alt || { es: '', en: '' }, caption: it.caption || { es: '', en: '' },
+        focusBefore: focusOf(it.focusBefore), focusAfter: focusOf(it.focusAfter), zoomBefore: zoomOf(it.zoomBefore), zoomAfter: zoomOf(it.zoomAfter), shape: shapeOf(it.shape) });
     }
     return out;
   }
@@ -191,7 +206,7 @@
   var api = {
     validateContent: validateContent, safeSocial: safeSocial, resolveSrc: resolveSrc,
     youtubeThumb: youtubeThumb, youtubeEmbed: youtubeEmbed, formatReviewDate: formatReviewDate,
-    toGalleryItems: toGalleryItems, toBeforeAfter: toBeforeAfter, toReviews: toReviews,
+    frameStyle: frameStyle, toGalleryItems: toGalleryItems, toBeforeAfter: toBeforeAfter, toReviews: toReviews,
     CATEGORIES: CATEGORIES, NETWORKS: NETWORKS
   };
   root.AIOContent = api;

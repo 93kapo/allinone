@@ -9,6 +9,7 @@ import { diffLists, describeDiff, hasChange } from './lib/changes.js';
 import { youtubeThumb } from './lib/youtube.js';
 import { SITE_GALLERY_URL } from './config.js';
 import { icon } from './icons.js';
+import { makeCompare } from './compare.js';
 import { dialog, confetti, countUp, anim, reduced } from './fx.js';
 import { pendingCount } from './app.js';
 
@@ -73,33 +74,11 @@ function changesFor() {
   };
 }
 
-// Comparador antes/después con deslizador táctil (y flechas del teclado).
+// Comparador antes/después (el mismo marco y encuadre que el sitio).
 function compare(it) {
   const before = imgUrl(it.before), after = imgUrl(it.after);
   if (!before || !after) return h('div', { class: 'pair' }, h('figure', null, thumbEl(before), h('figcaption', null, t('baBeforeTag'))), h('figure', null, thumbEl(after), h('figcaption', null, t('baAfterTag'))));
-  const imgBefore = h('img', { src: before, alt: '', draggable: 'false' });
-  const imgAfter = h('img', { class: 'top-img', src: after, alt: '', draggable: 'false' });
-  const knob = h('div', { class: 'knob2', role: 'slider', tabindex: '0', 'aria-label': t('sliderLabel'), 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': '50' }, '↔');
-  const handle = h('div', { class: 'handle' });
-  const box = h('div', { class: 'cmp' }, imgBefore, imgAfter, handle, knob, h('span', { class: 'lbl r' }, t('baBeforeTag')), h('span', { class: 'lbl l' }, t('baAfterTag')));
-  let pos = 50;
-  const set = (v) => {
-    pos = Math.max(0, Math.min(100, v));
-    imgAfter.style.clipPath = `inset(0 ${100 - pos}% 0 0)`;
-    handle.style.left = `${pos}%`; knob.style.left = `${pos}%`;
-    knob.setAttribute('aria-valuenow', String(Math.round(pos)));
-  };
-  set(50);
-  const fromEvent = (e) => { const r = box.getBoundingClientRect(); set(((e.clientX - r.left) / r.width) * 100); };
-  let drag = false;
-  box.addEventListener('pointerdown', (e) => { drag = true; try { box.setPointerCapture(e.pointerId); } catch { /* nada */ } fromEvent(e); });
-  box.addEventListener('pointermove', (e) => { if (drag) fromEvent(e); });
-  box.addEventListener('pointerup', () => { drag = false; });
-  box.addEventListener('pointercancel', () => { drag = false; });
-  knob.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft') { set(pos - 5); e.preventDefault(); } if (e.key === 'ArrowRight') { set(pos + 5); e.preventDefault(); } });
-  // al aparecer, el deslizador "enseña" cómo se usa
-  if (!reduced()) setTimeout(() => { const a = anim(box, [{ opacity: 1 }], { duration: 1 }); if (a) { let t0; const step = (ts) => { t0 ||= ts; const k = Math.min(1, (ts - t0) / 900); set(50 + Math.sin(k * Math.PI * 2) * 18 * (1 - k)); if (k < 1 && box.isConnected) requestAnimationFrame(step); }; requestAnimationFrame(step); } }, 500);
-  return box;
+  return makeCompare(it, { before, after }, { demo: true }).el;
 }
 
 function previewBody() {

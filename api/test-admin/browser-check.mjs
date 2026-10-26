@@ -246,6 +246,51 @@ try {
   const baKeys = (await apiGet('/__dev/state')).keys.filter((k) => k.startsWith('media/'));
   check('antes/después sube solo la foto principal (sin miniatura)', baKeys.length === 8, String(baKeys.length));
   await audit('antes y después (lista)');
+  // Encuadre del par vertical (fotos 2000x3000)
+  await b.eval(() => document.querySelector('article.card .fm-open').click());
+  await b.waitFor(() => !!document.querySelector('.fm .fm-frame.ready') && /Recomendado: Vertical/.test(document.querySelector('.fm').innerText));
+  const fm = () => b.eval(() => { const f = document.querySelector('.fm-frame'); const r = f.getBoundingClientRect(); const i = f.querySelector('img'); return { shape: f.dataset.shape, ratio: +(r.width / r.height).toFixed(2), fx: +f.dataset.fx, fy: +f.dataset.fy, zoom: +f.dataset.zoom, pos: i.style.objectPosition, tf: i.style.transform, on: [...document.querySelectorAll('.fm-shape.on')].map(x => x.textContent) }; });
+  await b.sleep(700); // termina la animación de entrada
+  const f0 = await fm();
+  check('selector de encuadre: recomienda y marca Vertical (3:4)', f0.shape === 'tall' && f0.ratio === 0.75 && f0.on.join() === 'Vertical', JSON.stringify(f0));
+  await audit('selector de encuadre');
+  await b.screenshot('/private/tmp/claude-501/frame-modal.png');
+  const ptr = (type, x, y, id = 1) => b.eval(`(() => { const f = document.querySelector('.fm-frame'); if (${JSON.stringify(type)} === 'pointerdown' && ${id} === 1) { const r = f.getBoundingClientRect(); window.__c = { x: r.left + r.width / 2, y: r.top + r.height / 2 }; } f.dispatchEvent(new PointerEvent(${JSON.stringify(type)}, { pointerId: ${id}, clientX: window.__c.x + ${x}, clientY: window.__c.y + ${y}, bubbles: true, isPrimary: true })); })()`);
+  await ptr('pointerdown', 0, 0); await ptr('pointermove', 0, 25); await ptr('pointermove', 0, 40); await ptr('pointerup', 0, 40);
+  const f1 = await fm();
+  check('arrastrar hacia abajo muestra la parte de arriba (y baja)', f1.fy < f0.fy && f1.pos === `50% ${f1.fy}%`, JSON.stringify([f0, f1]));
+  await b.eval(() => document.querySelector('.fm-frame').focus());
+  await b.eval(() => document.querySelector('.fm-frame').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })));
+  check('teclado: flecha abajo mueve el punto', (await fm()).fy === Math.min(100, f1.fy + 2));
+  await b.eval(() => { const z = document.getElementById('fm-zoom'); z.value = '2'; z.dispatchEvent(new Event('input', { bubbles: true })); });
+  const f2 = await fm();
+  check('control de acercar: zoom 2 aplica transform scale(2) con origen en el punto', f2.zoom === 2 && f2.tf === 'scale(2)', JSON.stringify(f2));
+  await b.eval(() => document.querySelector('.fm-step[aria-label="Acercar más"]').click());
+  check('botón + acerca', (await fm()).zoom === 2.2);
+  // pellizco con dos punteros
+  await ptr('pointerdown', -40, 0, 1); await ptr('pointerdown', 40, 0, 2); await ptr('pointermove', -80, 0, 1); await ptr('pointermove', 80, 0, 2); await ptr('pointerup', 0, 0, 1); await ptr('pointerup', 0, 0, 2);
+  check('pellizco aleja/acerca', (await fm()).zoom > 2.2, JSON.stringify(await fm()));
+  await click('Centrar');
+  const f3 = await fm();
+  check('Centrar vuelve a 50/50 y zoom 1', f3.fx === 50 && f3.fy === 50 && f3.zoom === 1 && f3.tf === 'none', JSON.stringify(f3));
+  await click('Foto del Después');
+  await ptr('pointerdown', 0, 0); await ptr('pointermove', 0, -60); await ptr('pointerup', 0, -60);
+  const f4 = await fm();
+  check('la otra foto tiene su propio encuadre (y sube)', f4.fy > 50, JSON.stringify(f4));
+  check('vista previa en vivo con la forma vertical', await b.eval(() => { const c = document.querySelector('.fm-prev .cmp'); const imgs = c.querySelectorAll('img'); return c.dataset.shape === 'tall' && imgs[1].style.objectPosition.endsWith('%') && imgs[1].style.objectPosition === document.querySelector('.fm-img').style.objectPosition; }));
+  await click('Foto del Antes');
+  await ptr('pointerdown', 0, 0); await ptr('pointermove', 0, 80); await ptr('pointerup', 0, 80);
+  const fb = await fm();
+  await click('Listo');
+  await b.waitFor(() => !document.querySelector('.fm'));
+  check('Listo cierra el selector y la tarjeta usa el encuadre', await b.eval((y) => document.querySelector('article.card .pair img').style.objectPosition === `50% ${y}%`, fb.fy), JSON.stringify(fb));
+  globalThis.__fb = fb; globalThis.__fa = f4;
+  await b.eval(() => document.querySelector('article.card .fm-open').click());
+  await b.waitFor(() => !!document.querySelector('.fm .fm-frame.ready'));
+  await click('Cancelar');
+  await b.waitFor(() => !document.querySelector('.fm'));
+  check('Cancelar descarta', true);
+
   await b.eval(() => [...document.querySelectorAll('article.card')][1].querySelectorAll('button')[3].click());
   await has('¿Quitar esta pareja');
   await click('No, dejarlo');
@@ -304,6 +349,8 @@ try {
   const pub = await apiGet('/api/content');
   check('el Worker guardó 5 de galería (2 fotos + YouTube + video nuevo + video heredado)', pub.gallery.length === 5 && pub.gallery.filter((g) => g.type === 'video').length === 2 && pub.gallery.some((g) => g.src === 'assets/gallery/allin1.mp4'), JSON.stringify(pub.gallery.map((g) => g.type)));
   check('la miniatura quedó como poster de cada foto', pub.gallery.filter((g) => g.type === 'image').every((g) => /-t\.jpg$/.test(g.poster)));
+  const vbp = pub.beforeAfter.find((x) => x.caption && x.caption.es === 'Puerta de madera');
+  check('el Worker guardó el encuadre y la forma del par vertical', !!vbp && vbp.shape === 'tall' && vbp.focusBefore.y === globalThis.__fb.fy && vbp.focusAfter.y === globalThis.__fa.fy && vbp.zoomBefore === 1, JSON.stringify(vbp));
   check('reseña y datos guardados', pub.reviews.length === 1 && pub.settings.licenseNumber === 'CGC-123456' && pub.settings.social.facebook.startsWith('https://'));
   check('IndexedDB sin borrador tras publicar', await b.eval(async () => new Promise((res) => { const r = indexedDB.open('allin1-panel', 1); r.onsuccess = () => { const g = r.result.transaction('kv').objectStore('kv').get('draft'); g.onsuccess = () => res(g.result === undefined); }; r.onerror = () => res(false); })));
 

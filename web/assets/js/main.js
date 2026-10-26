@@ -421,7 +421,7 @@
       var m, alt = pickL(it.alt);
       if (it.ph) m = phBox(it);
       else if (it.type === 'video' && !it.poster) { m = mk('video'); m.muted = true; m.playsInline = true; m.preload = 'metadata'; m.src = it.src + '#t=0.1'; m.setAttribute('aria-hidden', 'true'); m.tabIndex = -1; }
-      else { m = mk('img'); m.src = it.type === 'youtube' ? (it.poster || it.thumb) : (it.type === 'video' ? it.poster : it.src); m.alt = alt; m.loading = 'lazy'; m.width = 800; m.height = 600; }
+      else { m = mk('img'); m.src = it.type === 'youtube' ? (it.poster || it.thumb) : (it.type === 'video' ? it.poster : it.src); m.alt = alt; m.loading = 'lazy'; m.width = 800; m.height = 600; if (it.type === 'image' && it.focus) m.style.objectPosition = it.focus.x + '% ' + it.focus.y + '%'; }
       b.appendChild(m);
       if (it.type === 'video' || it.type === 'youtube') b.appendChild(playIcon());
       f.appendChild(b);
@@ -482,7 +482,8 @@
     var pairs = list.slice(), ph = !pairs.length;
     if (ph) pairs = [{ ph: 1 }, { ph: 2 }];
     pairs.forEach(function (p) {
-      var fig = mk('figure', 'ba-item'), ba = mk('div', 'ba');
+      var fig = mk('figure', 'ba-item'), ba = mk('div', 'ba'), ims = [];
+      ba.setAttribute('data-shape', p.shape || 'wide');
       function layer(cls, kind) {
         var l = mk('div', 'ba-layer ' + cls);
         if (p.ph) {
@@ -491,10 +492,21 @@
           $('.tag', l).textContent = T.ph; l.children[1].textContent = (kind === 'b' ? T.baBefore : T.baAfter) + ' ' + p.ph; l.children[2].textContent = T.baPhHint;
         } else {
           var im = mk('img'); im.src = kind === 'b' ? p.before : p.after; im.alt = ''; im.loading = 'lazy'; im.width = 800; im.height = 600; l.appendChild(im);
+          var fs = AC.frameStyle(kind === 'b' ? p.focusBefore : p.focusAfter, kind === 'b' ? p.zoomBefore : p.zoomAfter);
+          im.style.objectPosition = fs.objectPosition; im.style.transformOrigin = fs.transformOrigin; im.style.transform = fs.transform;
+          ims.push(im);
         }
         return l;
       }
       ba.appendChild(layer('ba-before', 'b')); ba.appendChild(layer('ba-after', 'a'));
+      /* No shape chosen in the panel: two portrait photos get the tall frame automatically */
+      if (!p.ph && !p.shape && ims.length === 2) {
+        var autoShape = function () {
+          if (!ims.every(function (i) { return i.naturalWidth > 0; })) return;
+          if (ims.every(function (i) { return i.naturalHeight > i.naturalWidth * 1.1; })) ba.setAttribute('data-shape', 'tall');
+        };
+        ims.forEach(function (i) { i.addEventListener('load', autoShape); }); autoShape();
+      }
       var l1 = mk('span', 'ba-lab l'), l2 = mk('span', 'ba-lab r'); l1.textContent = T.baBefore; l2.textContent = T.baAfter; l1.setAttribute('aria-hidden', 'true'); l2.setAttribute('aria-hidden', 'true');
       ba.appendChild(l1); ba.appendChild(l2);
       ba.appendChild(mk('div', 'ba-handle', '<span class="ba-knob"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l-6 6 6 6M15 6l6 6-6 6"/></svg></span>'));

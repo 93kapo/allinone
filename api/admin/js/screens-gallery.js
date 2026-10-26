@@ -2,6 +2,8 @@
 import { h, s as svg } from './dom.js';
 import { icon } from './icons.js';
 import { toast, confetti } from './fx.js';
+import { openFraming } from './framing-ui.js';
+import { applyFrame } from './compare.js';
 import { t } from './i18n.js';
 import { app, register, go, render, field, selectField, itemError, thumbEl, imgUrl, controls, backButton, msg, announce, videoEl } from './app.js';
 import { S, set } from './store.js';
@@ -92,6 +94,7 @@ Q.onItem = () => {
 function galleryCard(it, idx, list) {
   const url = it.type === 'youtube' ? youtubeThumb(it.youtubeId) : it.type === 'video' ? imgUrl(it.poster) : imgUrl(it.poster || it.src);
   const media = it.type === 'video' ? videoEl(it) : thumbEl(url);
+  if (it.type === 'image' && it.focus && media.tagName === 'IMG') applyFrame(media, it.focus, 1);
   const upd = (patch) => { set('gallery', updateItem(S.state.gallery, it.id, patch)); };
   const live = () => S.state.gallery.find((x) => x.id === it.id);
   const titleOf = it.caption.es || t('noTitle');
@@ -104,7 +107,11 @@ function galleryCard(it, idx, list) {
         field({ label: t('titleEs'), value: it.caption.es, max: 80, section: 'gallery', id: it.id, name: 'caption.es', onInput: (v) => { set('gallery', S.state.gallery.map((x) => (x.id === it.id ? setCaption(x, 'es', v) : x))); } }),
         field({ label: t('titleEn'), value: it.caption.en, max: 80, section: 'gallery', id: it.id, name: 'caption.en', onInput: (v) => { set('gallery', S.state.gallery.map((x) => (x.id === it.id ? setCaption(x, 'en', v) : x))); } }))),
     itemError('gallery', it.id),
-    controls('gallery', it, idx, list, { confirmText: t('confirmRemove', { name: titleOf }) }));
+    controls('gallery', it, idx, list, { confirmText: t('confirmRemove', { name: titleOf }) }),
+    it.type === 'image' ? h('button', { class: 'btn btn-secondary fm-open', type: 'button', onclick: () => {
+      const u = imgUrl(it.src);
+      if (u) openFraming({ mode: 'photo', urls: { photo: u }, initial: { focus: it.focus }, onSave: (r) => set('gallery', updateItem(S.state.gallery, it.id, r)) || render() });
+    } }, icon('crop', { size: 20 }), t('fmOpen')) : null);
 }
 
 register('gallery', () => {

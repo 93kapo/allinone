@@ -1,4 +1,5 @@
 // Estado de trabajo (borrador), comparación con lo publicado y respaldo en IndexedDB.
+import { framingFields } from './lib/framing.js';
 const SOCIALS = ['facebook', 'instagram', 'google', 'youtube', 'tiktok'];
 const pair = (p) => ({ es: (p && typeof p.es === 'string' ? p.es : ''), en: (p && typeof p.en === 'string' ? p.en : '') });
 
@@ -6,6 +7,7 @@ function normItem(it) {
   const o = { id: it.id, type: it.type, category: it.category || '', caption: pair(it.caption), alt: pair(it.alt), hidden: it.hidden === true };
   for (const k of ['src', 'youtubeId', 'poster']) if (typeof it[k] === 'string' && it[k]) o[k] = it[k];
   for (const k of ['w', 'h']) if (Number.isInteger(it[k])) o[k] = it[k];
+  if (it.focus && Number.isFinite(it.focus.x) && Number.isFinite(it.focus.y)) o.focus = { x: it.focus.x, y: it.focus.y };
   return o;
 }
 
@@ -16,7 +18,7 @@ export function normalize(c) {
   return {
     settings: { email: typeof s.email === 'string' ? s.email : '', social, showLicensed: s.showLicensed === true, licenseNumber: typeof s.licenseNumber === 'string' ? s.licenseNumber : '' },
     gallery: ((c && c.gallery) || []).map(normItem),
-    beforeAfter: ((c && c.beforeAfter) || []).map((b) => ({ id: b.id, before: b.before || '', after: b.after || '', caption: pair(b.caption), alt: pair(b.alt), hidden: b.hidden === true })),
+    beforeAfter: ((c && c.beforeAfter) || []).map((b) => ({ id: b.id, before: b.before || '', after: b.after || '', caption: pair(b.caption), alt: pair(b.alt), hidden: b.hidden === true, ...framingFields(b) })),
     reviews: ((c && c.reviews) || []).map((r) => ({ id: r.id, name: r.name || '', text: pair(r.text), source: r.source || '', date: r.date || '', hidden: r.hidden === true })),
   };
 }
