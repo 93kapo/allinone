@@ -752,7 +752,7 @@
         col.classList.remove('quick-on'); col.classList.add('wiz-on');
         if (r) { r.checked = true; groupErr('service', ''); }
         if (cur !== 1) show(1, -1);
-        var order = ['interior', 'exterior', 'drywall', 'flooring', 'bathroom', 'kitchen', 'decks', 'electrical', 'other'], sel = $('#f-service');
+        var order = ['interior', 'exterior', 'drywall', 'flooring', 'bathroom', 'kitchen', 'decks', 'other'], sel = $('#f-service');
         if (sel && order.indexOf(k) > -1) { sel.selectedIndex = order.indexOf(k) + 1; sel.classList.add('has-value'); }
       });
     });
