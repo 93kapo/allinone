@@ -1,5 +1,5 @@
 // Inicio, vista previa, publicar, historial, deshacer, borrador pendiente y errores de carga.
-import { h } from './dom.js';
+import { h, s as svg } from './dom.js';
 import { t } from './i18n.js';
 import { app, register, go, render, backButton, msg, thumbEl, imgUrl, announce, videoEl } from './app.js';
 import { S, setBase, useDraft, isDirty, clearDraft, saveNow, rebaseDraft, normalize } from './store.js';
@@ -8,27 +8,46 @@ import { apiErrorMessage } from './lib/errors.js';
 import { diffLists, describeDiff, hasChange } from './lib/changes.js';
 import { youtubeThumb } from './lib/youtube.js';
 import { SITE_GALLERY_URL } from './config.js';
+import { icon } from './icons.js';
+import { dialog, confetti, countUp, anim, reduced } from './fx.js';
+import { pendingCount } from './app.js';
 
 const SEC_NAME = () => ({ gallery: t('secPhotos'), beforeAfter: t('secBA'), reviews: t('secReviews'), settings: t('secSettings') });
 const SEC_SCREEN = { gallery: 'gallery', beforeAfter: 'ba', reviews: 'reviews', settings: 'settings' };
 const CAT = () => ({ interior: t('catInterior'), exterior: t('catExterior'), remodeling: t('catRemodeling') });
 
-register('loading', () => h('div', null, h('h1', null, t('loading'))));
+register('loading', () => h('div', { class: 'loading' },
+  h('picture', null, h('source', { media: '(prefers-color-scheme: dark)', srcset: 'assets/logo-white.png' }), h('img', { src: 'assets/logo-color.png', alt: '', width: 190, height: 190 })),
+  h('h1', null, t('loading'))));
 register('fatal', (p) => h('div', null, h('h1', null, t('loadError')), msg('error', p.text || t('errNetwork')),
   h('button', { class: 'btn btn-primary btn-big', type: 'button', onclick: () => p.retry && p.retry() }, t('retry'))));
 
+const greeting = () => { const hr = new Date().getHours(); return hr < 12 ? t('greetMorning') : hr < 19 ? t('greetAfternoon') : t('greetNight'); };
+
 register('home', () => {
-  const tile = (key, hint, screen) => h('button', { class: 'tile', type: 'button', onclick: () => go(screen) }, h('span', { class: 'tile-title' }, t(key)), h('span', { class: 'tile-hint' }, t(hint)));
+  const tile = (key, hint, screen, ico) => h('button', { class: 'tile', type: 'button', onclick: () => go(screen) },
+    h('span', { class: 'tile-ico' }, icon(ico, { size: 30 })),
+    h('span', { class: 'tile-copy' }, h('span', { class: 'tile-title' }, t(key)), h('span', { class: 'tile-hint' }, t(hint))),
+    icon('chevron', { size: 22, cls: 'chev' }));
+  const n = pendingCount();
+  const num = h('span', { class: 'bignum', 'aria-hidden': 'true' }, String(n));
+  if (n) countUp(num, n);
+  const status = h('section', { class: 'card status', 'aria-label': t('yourPage') },
+    h('span', { class: `dot${n || S.isFirst ? ' pending' : ''}`, 'aria-hidden': 'true' }),
+    h('div', { class: 'status-main' }, h('small', null, t('yourPage')), h('strong', null, n || S.isFirst ? t('statePending') : t('statePublished'))),
+    n ? num : null);
   return h('div', null,
-    h('h1', null, t('homeTitle')),
-    S.isFirst ? msg('', t('firstTime')) : h('p', null, t('homeHello')),
+    h('h1', { class: 'greet' }, greeting()),
+    h('p', { class: 'lead' }, S.email || t('homeHello')),
+    S.isFirst ? msg('', t('firstTime'), 'star') : null,
     app.ui.flash ? msg('ok', app.ui.flash) : null,
+    status,
     h('div', { class: 'tiles' },
-      tile('actPhotos', 'actPhotosHint', 'gallery'), tile('actBA', 'actBAHint', 'ba'),
-      tile('actSettings', 'actSettingsHint', 'settings'), tile('actReviews', 'actReviewsHint', 'reviews')),
+      tile('actPhotos', 'actPhotosHint', 'gallery', 'camera'), tile('actBA', 'actBAHint', 'ba', 'ba'),
+      tile('actSettings', 'actSettingsHint', 'settings', 'store'), tile('actReviews', 'actReviewsHint', 'reviews', 'star')),
     h('div', { class: 'shortcuts' },
-      h('button', { class: 'btn btn-secondary btn-big', type: 'button', onclick: () => go('undo') }, t('actUndo')),
-      h('button', { class: 'btn btn-secondary btn-big', type: 'button', onclick: () => go('history') }, t('actHistory'))));
+      h('button', { class: 'btn btn-secondary btn-big', type: 'button', onclick: () => go('undo') }, icon('undo', { size: 22 }), t('actUndo')),
+      h('button', { class: 'btn btn-secondary btn-big', type: 'button', onclick: () => go('history') }, icon('history', { size: 22 }), t('actHistory'))));
 });
 
 // ---- Borrador pendiente ----
@@ -54,6 +73,35 @@ function changesFor() {
   };
 }
 
+// Comparador antes/después con deslizador táctil (y flechas del teclado).
+function compare(it) {
+  const before = imgUrl(it.before), after = imgUrl(it.after);
+  if (!before || !after) return h('div', { class: 'pair' }, h('figure', null, thumbEl(before), h('figcaption', null, t('baBeforeTag'))), h('figure', null, thumbEl(after), h('figcaption', null, t('baAfterTag'))));
+  const imgBefore = h('img', { src: before, alt: '', draggable: 'false' });
+  const imgAfter = h('img', { class: 'top-img', src: after, alt: '', draggable: 'false' });
+  const knob = h('div', { class: 'knob2', role: 'slider', tabindex: '0', 'aria-label': t('sliderLabel'), 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': '50' }, '↔');
+  const handle = h('div', { class: 'handle' });
+  const box = h('div', { class: 'cmp' }, imgBefore, imgAfter, handle, knob, h('span', { class: 'lbl r' }, t('baBeforeTag')), h('span', { class: 'lbl l' }, t('baAfterTag')));
+  let pos = 50;
+  const set = (v) => {
+    pos = Math.max(0, Math.min(100, v));
+    imgAfter.style.clipPath = `inset(0 ${100 - pos}% 0 0)`;
+    handle.style.left = `${pos}%`; knob.style.left = `${pos}%`;
+    knob.setAttribute('aria-valuenow', String(Math.round(pos)));
+  };
+  set(50);
+  const fromEvent = (e) => { const r = box.getBoundingClientRect(); set(((e.clientX - r.left) / r.width) * 100); };
+  let drag = false;
+  box.addEventListener('pointerdown', (e) => { drag = true; try { box.setPointerCapture(e.pointerId); } catch { /* nada */ } fromEvent(e); });
+  box.addEventListener('pointermove', (e) => { if (drag) fromEvent(e); });
+  box.addEventListener('pointerup', () => { drag = false; });
+  box.addEventListener('pointercancel', () => { drag = false; });
+  knob.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft') { set(pos - 5); e.preventDefault(); } if (e.key === 'ArrowRight') { set(pos + 5); e.preventDefault(); } });
+  // al aparecer, el deslizador "enseña" cómo se usa
+  if (!reduced()) setTimeout(() => { const a = anim(box, [{ opacity: 1 }], { duration: 1 }); if (a) { let t0; const step = (ts) => { t0 ||= ts; const k = Math.min(1, (ts - t0) / 900); set(50 + Math.sin(k * Math.PI * 2) * 18 * (1 - k)); if (k < 1 && box.isConnected) requestAnimationFrame(step); }; requestAnimationFrame(step); } }, 500);
+  return box;
+}
+
 function previewBody() {
   const st = S.state, cat = CAT();
   const root = h('div');
@@ -67,9 +115,8 @@ function previewBody() {
   if (hid(st.gallery)) root.append(h('p', { class: 'help' }, t('prevHiddenNote', { n: hid(st.gallery) })));
   root.append(h('h2', null, t('prevBA')));
   const b = vis(st.beforeAfter);
-  root.append(b.length ? h('div', null, b.map((it) => h('div', { class: 'card' },
-    h('div', { class: 'pair' }, h('figure', null, thumbEl(imgUrl(it.before)), h('figcaption', null, t('baBeforeTag'))), h('figure', null, thumbEl(imgUrl(it.after)), h('figcaption', null, t('baAfterTag')))),
-    h('p', null, h('strong', null, it.caption.es || it.alt.es))))) : h('p', null, t('empty')));
+  root.append(b.length ? h('div', { class: 'cards' }, b.map((it) => h('div', { class: 'card' },
+    compare(it), h('p', null, h('strong', null, it.caption.es || it.alt.es))))) : h('p', null, t('empty')));
   if (hid(st.beforeAfter)) root.append(h('p', { class: 'help' }, t('prevHiddenNote', { n: hid(st.beforeAfter) })));
   root.append(h('h2', null, t('prevReviews')));
   const r = vis(st.reviews);
@@ -102,7 +149,7 @@ register('preview', (p) => {
   root.append(h('h2', null, t('prevChanges')));
   root.append(lines.length ? h('ul', null, lines.map((l) => h('li', null, l))) : h('p', null, t('prevNoChanges')));
   root.append(previewBody());
-  const go1 = h('button', { class: 'btn btn-primary btn-big', type: 'button', disabled: !any, onclick: async () => { go1.disabled = true; go1.textContent = t('publishing'); await publish(); } }, t('publishNow'));
+  const go1 = h('button', { class: 'btn btn-primary btn-big', type: 'button', disabled: !any, onclick: async () => { go1.disabled = true; go1.replaceChildren(h('span', { class: 'spin', 'aria-hidden': 'true' }), t('publishing')); await publish(); } }, icon('upload', { size: 22 }), t('publishNow'));
   const row = h('div', { class: 'stack' }, go1);
   if (p.conflict) row.prepend(h('button', { class: 'btn btn-secondary btn-big', type: 'button', onclick: () => app.reload() }, t('reload')));
   row.append(h('button', { class: 'btn btn-secondary btn-big', type: 'button', onclick: () => go('home') }, t('keepEditing')));
@@ -125,6 +172,7 @@ async function publish() {
     app.ui.attempted = false; app.ui.touched.clear(); app.ui.flash = '';
     go('done');
     announce(t('published'));
+    setTimeout(() => confetti({ count: 26, ms: 1200 }), 350);
   } catch (e) {
     const text = apiErrorMessage(e, 'publish');
     if (e.status === 422 && e.body && Array.isArray(e.body.errores)) go('preview', { serverErrors: e.body.errores, error: text });
@@ -132,11 +180,12 @@ async function publish() {
   }
 }
 
-register('done', () => h('div', null,
+register('done', () => h('div', { class: 'done' },
+  svg('svg', { class: 'bigcheck', viewBox: '0 0 76 76', 'aria-hidden': 'true' }, svg('circle', { cx: 38, cy: 38, r: 36 }), svg('path', { d: 'M22 39l11 11 21-23' })),
   h('h1', null, t('published')),
-  msg('ok', t('published')),
+  h('p', { class: 'lead' }, t('publishedNote')),
   h('div', { class: 'stack' },
-    h('a', { class: 'btn btn-primary btn-big', href: SITE_GALLERY_URL, target: '_blank', rel: 'noopener' }, t('publishedLink')),
+    h('a', { class: 'btn btn-primary btn-big', href: SITE_GALLERY_URL, target: '_blank', rel: 'noopener' }, icon('link', { size: 22 }), t('publishedLink')),
     h('button', { class: 'btn btn-secondary btn-big', type: 'button', onclick: () => go('home') }, t('publishedBack')))));
 
 // ---- Historial y deshacer ----
@@ -186,12 +235,13 @@ register('history', (p) => {
       h('p', null, summaryText(v.resumen)),
       v.restauradaDe ? h('p', { class: 'help' }, t('histRestoredFrom')) : null);
     if (v.actual) { li.append(h('span', { class: 'tag' }, t('histCurrent'))); return li; }
-    if (p.confirm === v.version) {
-      li.append(h('div', { class: 'confirm', role: 'alertdialog' }, h('p', null, t('histConfirm', { date: fmtDate(v.updatedAt, v.version) }) + (isDirty() ? t('histConfirmDirty') : '')),
-        h('div', { class: 'row' },
-          h('button', { class: 'btn btn-primary', type: 'button', onclick: async () => { try { await doRestore(v.version, t('histRestored')); } catch (e) { p.confirm = null; p.restoreError = apiErrorMessage(e, 'restore'); render(); } } }, t('histYes')),
-          h('button', { class: 'btn btn-secondary', type: 'button', onclick: () => { p.confirm = null; render(); } }, t('cancel')))));
-    } else li.append(h('button', { class: 'btn btn-secondary', type: 'button', onclick: () => { p.confirm = v.version; p.restoreError = ''; render(); } }, t('histRestore')));
+    li.append(h('button', { class: 'btn btn-secondary', type: 'button', onclick: () => {
+      p.restoreError = '';
+      dialog({ title: t('sureTitle'), text: t('histConfirm', { date: fmtDate(v.updatedAt, v.version) }) + (isDirty() ? t('histConfirmDirty') : ''), buttons: [
+        { label: t('histYes'), cls: 'btn-primary', onClick: async () => { try { await doRestore(v.version, t('histRestored')); } catch (e) { p.restoreError = apiErrorMessage(e, 'restore'); render(); } } },
+        { label: t('cancel') },
+      ] });
+    } }, icon('history', { size: 20 }), t('histRestore')));
     return li;
   })));
   return root;

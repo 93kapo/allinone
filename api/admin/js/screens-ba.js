@@ -1,5 +1,6 @@
 // Antes y después.
 import { h } from './dom.js';
+import { icon } from './icons.js';
 import { t } from './i18n.js';
 import { app, register, go, render, field, itemError, thumbEl, imgUrl, controls, backButton, msg, announce } from './app.js';
 import { S, set } from './store.js';
@@ -37,12 +38,12 @@ function slot(which, label) {
   return h('figure', null,
     cur ? thumbEl(cur.url) : h('div', { class: 'thumb-ph' }, label),
     h('figcaption', null, label),
-    h('button', { class: 'btn btn-secondary btn-small', type: 'button', disabled: !!nb.busy, onclick: () => pickFile(which) }, nb.busy === which ? t('baPreparing') : (cur ? t('baChange') : t('baPick'))));
+    h('button', { class: 'btn btn-secondary btn-small', type: 'button', disabled: !!nb.busy, onclick: () => pickFile(which) }, nb.busy === which ? h('span', { class: 'spin', 'aria-hidden': 'true' }) : icon('camera', { size: 20 }), nb.busy === which ? t('baPreparing') : (cur ? t('baChange') : t('baPick'))));
 }
 
 function baCard(it, idx, list) {
   const titleOf = it.caption.es || t('noTitle');
-  return h('article', { class: `card${it.hidden ? ' is-hidden' : ''}` },
+  return h('article', { class: `card${it.hidden ? ' is-hidden' : ''}`, 'data-id': it.id },
     it.hidden ? h('span', { class: 'tag tag-hidden' }, t('hiddenTag')) : null,
     h('div', { class: 'pair' },
       h('figure', null, thumbEl(imgUrl(it.before)), h('figcaption', null, t('baBeforeTag'))),
@@ -56,7 +57,7 @@ function baCard(it, idx, list) {
 register('ba', () => {
   const root = h('div');
   const list = S.state.beforeAfter;
-  const err = h('p', { class: 'msg msg-error', role: 'alert' }, nb.error || '');
+  const err = h('div', { class: 'msg msg-error', role: 'alert' }, icon('alert', { size: 22 }), h('p', null, nb.error || ''));
   err.hidden = !nb.error;
   const esIn = field({ label: t('titleEs'), value: nb.es, max: 80, section: 'ba-new', id: 'x', name: 'es', onInput: (v) => { nb.es = v; } });
   const enIn = field({ label: t('titleEn'), value: nb.en, max: 80, section: 'ba-new', id: 'x', name: 'en', onInput: (v) => { nb.en = v; } });
@@ -75,6 +76,6 @@ register('ba', () => {
       h('div', { class: 'pair' }, slot('before', t('baBefore')), slot('after', t('baAfter'))),
       err, esIn, enIn, localErr, add),
     !list.length ? h('p', { class: 'msg' }, t('empty')) : null,
-    h('div', null, list.map((it, i) => baCard(it, i, list))));
+    h('div', { class: 'cards' }, list.map((it, i) => baCard(it, i, list))));
   return root;
 });

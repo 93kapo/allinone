@@ -17,12 +17,12 @@ b.on('Fetch.requestPaused', (p) => {
 
 const $text = (txt, sel = 'button,a') => `[...document.querySelectorAll(${JSON.stringify(sel)})].find(e => (e.textContent.trim() === ${JSON.stringify(txt)} || (e.querySelector('.tile-title') || {}).textContent === ${JSON.stringify(txt)}) && e.offsetParent !== null)`;
 const click = async (txt, sel) => { await b.waitFor(`!!(${$text(txt, sel)})`); await b.eval(`(${$text(txt, sel)}).click()`); await b.sleep(120); };
-const has = (txt) => b.waitFor((x) => document.getElementById('app').innerText.includes(x), txt);
+const has = (txt) => b.waitFor((x) => document.body.innerText.includes(x), txt);
 const body = () => b.eval(() => document.getElementById('app').innerText);
 const label = (l) => `(() => { const lb = [...document.querySelectorAll('label')].filter(x => x.textContent.trim() === ${JSON.stringify(l)} && x.offsetParent !== null); return lb; })()`;
 const setField = async (l, v, idx = 0) => b.eval(`(() => { const lb = ${label(l)}[${idx}]; const i = document.getElementById(lb.htmlFor); i.focus(); i.value = ${JSON.stringify(v)}; i.dispatchEvent(new Event('input', {bubbles:true})); i.dispatchEvent(new Event('change', {bubbles:true})); i.blur(); return true; })()`);
 const getField = async (l, idx = 0) => b.eval(`document.getElementById(${label(l)}[${idx}].htmlFor).value`);
-const errOf = async (l, idx = 0) => b.eval(`(() => { const i = document.getElementById(${label(l)}[${idx}].htmlFor); return i.parentElement.querySelector('.err').textContent; })()`);
+const errOf = async (l, idx = 0) => b.eval(`(() => { const i = document.getElementById(${label(l)}[${idx}].htmlFor); return i.closest('.field').querySelector('.err').textContent; })()`);
 const home = async () => { await b.eval(`(${$text('← Inicio')} || {click(){}}).click()`); await b.sleep(150); };
 const apiGet = (p) => b.eval(`fetch(${JSON.stringify(p)}, {cache:'no-store'}).then(r => r.json())`);
 const makeFiles = (n, w = 3000, h = 2000) => b.eval(`(async () => {
@@ -355,6 +355,19 @@ try {
   await b.viewport(1280, 900, false);
   await click('← Inicio'); await click('Fotos y videos'); await b.sleep(300);
   await b.screenshot('/private/tmp/claude-501/gallery1280.png');
+
+  // reducir movimiento: nada de animaciones largas ni infinitas
+  await b.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+  await b.viewport(390, 844, true);
+  await b.goto(`${BASE}/?mock=1`); await b.sleep(1800);
+  for (const scr of ['inicio', 'fotos']) {
+    if (scr === 'fotos') { await click('Fotos y videos'); await b.sleep(900); }
+    await b.sleep(400);
+    const long = await b.eval(() => document.getAnimations().filter((a) => { const t = a.effect.getComputedTiming(); return a.playState === 'running' && (t.iterations === Infinity || t.activeDuration > 100); }).map((a) => (a.animationName || a.id || 'waapi')));
+    check(`reducir movimiento (${scr}): sin animaciones largas/infinitas`, long.length === 0, JSON.stringify(long));
+  }
+  await b.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] });
+  await b.viewport(1280, 900, false);
 
   // CSP y consola
   const csp = await b.eval(() => window.__csp);

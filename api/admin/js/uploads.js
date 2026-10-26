@@ -7,7 +7,7 @@ import { videoProblem, formatSize } from './lib/video.js';
 import { apiErrorMessage } from './lib/errors.js';
 import { addItem, makeId } from './lib/listops.js';
 
-export const Q = { jobs: [], running: false, total: 0, finished: 0, onChange: () => {}, onItem: () => {} };
+export const Q = { jobs: [], running: false, total: 0, finished: 0, onChange: () => {}, onItem: () => {}, onAllDone: () => {} };
 let seq = 0;
 
 export function enqueue(files) {
@@ -45,7 +45,10 @@ async function run() {
       if (!job) break;
       await one(job);
     }
-  } finally { Q.running = false; Q.onChange(); }
+  } finally {
+    Q.running = false; Q.onChange();
+    if (Q.finished > 0 && !Q.jobs.some((j) => ['wait', 'prep', 'up', 'error'].includes(j.status))) Q.onAllDone();
+  }
 }
 
 async function oneVideo(job) {
@@ -68,7 +71,8 @@ async function oneVideo(job) {
       id, type: 'video', category: '', src: job.mainKey, poster: job.thumbKey, w: pz.vw, h: pz.vh,
       caption: { es: '', en: '' }, alt: { es: '', en: '' }, hidden: false,
     }, { atStart: true }));
-    Q.jobs = Q.jobs.filter((j) => j !== job);
+    job.status = 'done'; job.progress = 1;
+    setTimeout(() => { Q.jobs = Q.jobs.filter((j) => j !== job); if (job.preview) URL.revokeObjectURL(job.preview); Q.onChange(); }, 1100);
     Q.finished++;
     job.prepared = null;
     Q.onItem();
@@ -102,7 +106,8 @@ async function one(job) {
       id, type: 'image', category: '', src: job.mainKey, poster: job.thumbKey, w: main.w, h: main.h,
       caption: { es: '', en: '' }, alt: { es: '', en: '' }, hidden: false,
     }, { atStart: true }));
-    Q.jobs = Q.jobs.filter((j) => j !== job);
+    job.status = 'done'; job.progress = 1;
+    setTimeout(() => { Q.jobs = Q.jobs.filter((j) => j !== job); if (job.preview) URL.revokeObjectURL(job.preview); Q.onChange(); }, 1100);
     Q.finished++;
     job.prepared = null;
     Q.onItem();

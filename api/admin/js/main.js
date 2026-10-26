@@ -1,6 +1,7 @@
 // Arranque del panel. El modo de prueba (?mock=1) solo existe en localhost: en producción
 // isMockAllowed() es siempre false y el módulo falso nunca se descarga.
 import { h, $ } from './dom.js';
+import { anim, reduced } from './fx.js';
 import { t } from './i18n.js';
 import { isMockAllowed } from './lib/mockgate.js';
 import { MEDIA_BASE } from './config.js';
@@ -15,6 +16,19 @@ import './screens-forms.js';
 import { startPublish } from './screens-publish.js';
 
 const mock = isMockAllowed(location);
+
+// Efecto de toque (ripple) en los botones: solo transform/opacity y se omite con "reducir movimiento".
+document.addEventListener('pointerdown', (e) => {
+  const b = e.target.closest && e.target.closest('.btn, .tile');
+  if (!b || b.disabled || reduced()) return;
+  const r = b.getBoundingClientRect(), d = Math.max(r.width, r.height) * 1.2;
+  const dot = h('span', { class: 'ripple', 'aria-hidden': 'true' });
+  dot.style.width = dot.style.height = `${d}px`;
+  dot.style.left = `${e.clientX - r.left - d / 2}px`; dot.style.top = `${e.clientY - r.top - d / 2}px`;
+  b.append(dot);
+  const a = anim(dot, [{ transform: 'scale(0)', opacity: .22 }, { transform: 'scale(1)', opacity: 0 }], { duration: 520 });
+  if (a) a.onfinish = () => dot.remove(); else dot.remove();
+}, { passive: true });
 app.mediaBase = mock ? '/__media' : MEDIA_BASE;
 
 async function loadAll() {

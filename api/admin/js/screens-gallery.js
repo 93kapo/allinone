@@ -1,5 +1,7 @@
 // Fotos y videos + Agregar video de YouTube.
-import { h } from './dom.js';
+import { h, s as svg } from './dom.js';
+import { icon } from './icons.js';
+import { toast, confetti } from './fx.js';
 import { t } from './i18n.js';
 import { app, register, go, render, field, selectField, itemError, thumbEl, imgUrl, controls, backButton, msg, announce, videoEl } from './app.js';
 import { S, set } from './store.js';
@@ -33,27 +35,41 @@ function filePicker() {
   return picker;
 }
 
+// Anillo de progreso circular real (un anillo por foto).
+const CIRC = 2 * Math.PI * 27;
+function ring(p) {
+  const fg = svg('circle', { class: 'fg', cx: 32, cy: 32, r: 27, 'stroke-dasharray': CIRC.toFixed(1) });
+  fg.style.strokeDashoffset = String((CIRC * (1 - p)).toFixed(1));
+  return svg('svg', { class: 'ring', viewBox: '0 0 64 64', 'aria-hidden': 'true' }, svg('circle', { class: 'bg', cx: 32, cy: 32, r: 27 }), fg);
+}
+
 // Dibuja solo el panel de subida (no toca los campos que la persona está escribiendo).
 function uploadPanel() {
   const jobs = Q.jobs;
   const box = h('div', { id: 'upload-panel', 'aria-live': 'polite' });
   if (!jobs.length) return box;
-  const active = jobs.find((j) => j.status === 'prep' || j.status === 'up');
-  const n = Q.total, i = Math.min(n, Q.finished + 1);
-  if (active) {
-    const pct = active.status === 'prep' ? 0 : Math.round(active.progress * 100);
-    const bar = h('div'); bar.style.width = `${pct}%`;
-    const isV = active.kind === 'video';
-    box.append(h('div', { class: 'msg' },
-      isV ? h('p', null, t('videoFile', { name: active.name, size: formatSize(active.file.size) })) : null,
-      h('p', null, isV ? (active.status === 'prep' ? t('preparingVideo') : t('uploadingVideo', { pct })) : (active.status === 'prep' ? t('preparing', { i, n }) : `${t('uploading', { i, n })} ${pct}%`)),
-      h('div', { class: 'progress', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': String(pct) }, bar)));
-  }
-  for (const j of jobs.filter((x) => x.status === 'error')) {
-    box.append(h('div', { class: 'msg msg-error', role: 'alert' }, h('p', null, j.error),
-      h('div', { class: 'row' },
-        j.stop ? h('button', { class: 'btn btn-primary', type: 'button', onclick: () => retry(j) }, t('uploadRetry')) : null,
-        h('button', { class: 'btn btn-secondary', type: 'button', onclick: () => drop(j) }, t('uploadSkip')))));
+  const n = Q.total;
+  let i = 0;
+  for (const j of jobs) {
+    if (j.status === 'error') {
+      box.append(h('div', { class: 'msg msg-error', role: 'alert' }, icon('alert', { size: 22 }), h('div', null, h('p', null, j.error),
+        h('div', { class: 'row' },
+          j.stop ? h('button', { class: 'btn btn-primary', type: 'button', onclick: () => retry(j) }, t('uploadRetry')) : null,
+          h('button', { class: 'btn btn-secondary', type: 'button', onclick: () => drop(j) }, t('uploadSkip'))))));
+      continue;
+    }
+    i++;
+    const isV = j.kind === 'video';
+    if (!isV && !j.preview) { try { j.preview = URL.createObjectURL(j.file); } catch { /* sin vista previa */ } }
+    const pct = j.status === 'done' ? 100 : j.status === 'prep' ? 0 : Math.round(j.progress * 100);
+    const label = j.status === 'done' ? t('upDone') : j.status === 'wait' ? t('upWaiting') : isV ? (j.status === 'prep' ? t('preparingVideo') : t('uploadingVideo', { pct })) : (j.status === 'prep' ? t('preparing', { i: Q.finished + 1, n }) : `${t('uploading', { i: Q.finished + 1, n })} ${pct}%`);
+    const thumb = h('div', { class: 'upthumb' },
+      j.preview ? h('img', { src: j.preview, alt: '' }) : icon('video', { size: 28 }),
+      j.status === 'up' || j.status === 'prep' ? [h('span', { class: 'ring-shade' }), ring(pct / 100)] : null,
+      j.status === 'done' ? [h('span', { class: 'ring-shade' }), svg('svg', { class: 'upcheck', viewBox: '0 0 34 34', fill: 'none', stroke: 'currentColor', 'stroke-width': '4', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true' }, svg('path', { d: 'M8 18l7 7 12-14' }))] : null);
+    box.append(h('div', { class: `uprow${j.status === 'done' ? ' done' : ''}` }, thumb,
+      h('div', { class: 'uptext' }, j.name || (isV ? t('videoItem') : t('photoItem')), h('small', null, isV ? `${formatSize(j.file.size)} · ${label}` : label)),
+      h('span', { class: 'sr-only', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': String(pct) })));
   }
   return box;
 }
@@ -63,6 +79,7 @@ function refreshUploadPanel() {
   if (old) old.replaceWith(uploadPanel());
 }
 Q.onChange = refreshUploadPanel;
+Q.onAllDone = () => { toast(t('upAllDone'), { ms: 4500 }); if (app.screen === 'gallery') confetti({ x: innerWidth / 2, y: 220, count: 14, ms: 1000 }); };
 Q.onItem = () => {
   app.ui.quota = null;
   if (app.screen !== 'gallery') return;
@@ -78,7 +95,7 @@ function galleryCard(it, idx, list) {
   const upd = (patch) => { set('gallery', updateItem(S.state.gallery, it.id, patch)); };
   const live = () => S.state.gallery.find((x) => x.id === it.id);
   const titleOf = it.caption.es || t('noTitle');
-  return h('article', { class: `card${it.hidden ? ' is-hidden' : ''}` },
+  return h('article', { class: `card${it.hidden ? ' is-hidden' : ''}`, 'data-id': it.id },
     h('div', { class: 'card-head' }, media,
       h('div', { class: 'card-body' },
         h('span', { class: 'tag' }, it.type === 'youtube' ? t('youtubeVideo') : it.type === 'video' ? t('videoItem') : t('photoItem')),
@@ -100,14 +117,25 @@ register('gallery', () => {
     app.ui.quota = false;
     app.api.me().then((m) => { app.ui.quota = { files: m.cuotas.archivosRestantes, videos: m.cuotas.videosRestantes ?? 0 }; if (app.screen === 'gallery') { const a = document.activeElement; if (!(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) render(); } }).catch(() => { /* la cuota es solo una ayuda */ });
   }
-  root.append(h('div', { class: 'stack' },
-    h('button', { class: 'btn btn-primary btn-big', type: 'button', onclick: () => filePicker().click() }, t('addPhotos')),
-    h('button', { class: 'btn btn-primary btn-big', type: 'button', id: 'add-video', onclick: () => videoPicker().click() }, t('addVideo')),
-    h('button', { class: 'btn btn-secondary btn-big', type: 'button', onclick: () => go('youtube') }, t('addYouTube'))));
-  root.append(h('p', { class: 'help' }, t('videoTips')));
+  const dz = h('div', { class: 'dropzone' },
+    h('div', { class: 'dz-head' }, h('span', { class: 'dz-ico' }, icon('upload', { size: 28 })), h('div', null, h('strong', null, t('dzTitle')), h('p', null, t('dzHint')))),
+    h('button', { class: 'btn btn-primary btn-big', type: 'button', onclick: () => filePicker().click() }, icon('camera', { size: 22 }), t('addPhotos')),
+    h('button', { class: 'btn btn-primary btn-big', type: 'button', id: 'add-video', onclick: () => videoPicker().click() }, icon('video', { size: 22 }), t('addVideo')),
+    h('button', { class: 'btn btn-secondary btn-big', type: 'button', onclick: () => go('youtube') }, icon('play', { size: 20 }), t('addYouTube')),
+    h('p', { class: 'help' }, t('videoTips')));
+  dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+  dz.addEventListener('drop', (e) => {
+    e.preventDefault(); dz.classList.remove('over');
+    const files = [...(e.dataTransfer ? e.dataTransfer.files : [])];
+    const imgs = files.filter((f) => /^image\//.test(f.type)), vids = files.filter((f) => /^video\//.test(f.type));
+    if (imgs.length) enqueue(imgs);
+    for (const v of vids) enqueueVideo(v);
+  });
+  root.append(dz);
   root.append(uploadPanel());
   if (!list.length) root.append(h('p', { class: 'msg' }, t('empty')));
-  root.append(h('div', null, list.map((it, i) => galleryCard(it, i, list))));
+  root.append(h('div', { class: 'cards' }, list.map((it, i) => galleryCard(it, i, list))));
   return root;
 });
 

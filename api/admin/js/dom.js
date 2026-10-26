@@ -20,3 +20,12 @@ function add(el, kids) {
 }
 export const $ = (sel, root = document) => root.querySelector(sel);
 export function clear(el) { while (el.firstChild) el.removeChild(el.firstChild); }
+
+// Elementos SVG (para íconos). Sin innerHTML.
+const NS = 'http://www.w3.org/2000/svg';
+export function s(tag, attrs, ...kids) {
+  const el = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs || {})) if (v !== undefined && v !== null && v !== false) el.setAttribute(k, String(v));
+  for (const k of kids.flat(Infinity)) if (k instanceof Node) el.append(k);
+  return el;
+}

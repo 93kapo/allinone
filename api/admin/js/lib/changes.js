@@ -22,3 +22,15 @@ export function describeDiff(d) {
 }
 
 export const hasChange = (d) => !!(d.added || d.removed || d.modified || d.moved);
+
+// Cuántos cambios hay sin publicar (para el contador de la barra).
+export function countChanges(base, next) {
+  if (!base || !next) return 0;
+  let n = 0;
+  for (const k of ['gallery', 'beforeAfter', 'reviews']) {
+    const d = diffLists(base[k], next[k]);
+    n += d.added + d.removed + d.modified + (d.moved ? 1 : 0);
+  }
+  if (JSON.stringify(base.settings) !== JSON.stringify(next.settings)) n += 1;
+  return n;
+}

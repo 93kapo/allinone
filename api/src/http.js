@@ -6,7 +6,7 @@ export const CSP =
   "https://securetoken.googleapis.com https://firebaseinstallations.googleapis.com; " +
   "img-src 'self' https://media.allin1jax.com https://allin1jax.com https://www.allin1jax.com https://i.ytimg.com data: blob:; " +
   "media-src 'self' https://media.allin1jax.com https://allin1jax.com https://www.allin1jax.com blob:; " +
-  "style-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'";
+  "style-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'";
 
 export const SECURITY_HEADERS = {
   'content-security-policy': CSP,
